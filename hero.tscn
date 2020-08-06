@@ -1,0 +1,35 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://mini_meshes/paladin.tres" type="ArrayMesh" id=1]
+[ext_resource path="res://object_label.tscn" type="PackedScene" id=2]
+[ext_resource path="res://mini.gd" type="Script" id=4]
+
+[sub_resource type="ConcavePolygonShape" id=1]
+data = PoolVector3Array( 0.5393, 2, 0.5393, -0.5393, 2, -0.5393, 0.5393, 2, -0.5393, 0.5393, 2, 0.5393, -0.5393, 2, 0.5393, -0.5393, 2, -0.5393, -0.5393, 2, 0.5393, 0.5393, 0, 0.5393, -0.5393, 0, 0.5393, -0.5393, 2, 0.5393, 0.5393, 2, 0.5393, 0.5393, 0, 0.5393, -0.5393, 2, -0.5393, -0.5393, 0, 0.5393, -0.5393, 0, -0.5393, -0.5393, 2, -0.5393, -0.5393, 2, 0.5393, -0.5393, 0, 0.5393, -0.5393, 0, 0.5393, 0.5393, 0, -0.5393, -0.5393, 0, -0.5393, -0.5393, 0, 0.5393, 0.5393, 0, 0.5393, 0.5393, 0, -0.5393, 0.5393, 2, 0.5393, 0.5393, 0, -0.5393, 0.5393, 0, 0.5393, 0.5393, 2, 0.5393, 0.5393, 2, -0.5393, 0.5393, 0, -0.5393, 0.5393, 2, -0.5393, -0.5393, 0, -0.5393, 0.5393, 0, -0.5393, 0.5393, 2, -0.5393, -0.5393, 2, -0.5393, -0.5393, 0, -0.5393 )
+
+[sub_resource type="ViewportTexture" id=2]
+viewport_path = NodePath("name/viewport")
+
+[node name="hero" type="StaticBody"]
+script = ExtResource( 4 )
+
+[node name="mesh" type="MeshInstance" parent="."]
+mesh = ExtResource( 1 )
+material/0 = null
+
+[node name="CollisionShape" type="CollisionShape" parent="."]
+shape = SubResource( 1 )
+
+[node name="name" type="Sprite3D" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.406, 0 )
+flip_v = true
+billboard = 1
+texture = SubResource( 2 )
+
+[node name="viewport" type="Viewport" parent="name"]
+arvr = true
+size = Vector2( 500, 70 )
+own_world = true
+transparent_bg = true
+
+[node name="name" parent="name/viewport" instance=ExtResource( 2 )]

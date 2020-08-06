@@ -1,0 +1,428 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://name_generator.gd" type="Script" id=1]
+[ext_resource path="res://unsharedstructures.tres" type="MeshLibrary" id=4]
+[ext_resource path="res://structures.tres" type="MeshLibrary" id=6]
+[ext_resource path="res://root.gd" type="Script" id=7]
+
+[sub_resource type="SpatialMaterial" id=1]
+albedo_color = Color( 1, 0.533333, 0.0352941, 1 )
+emission_enabled = true
+emission = Color( 0.992157, 0.12549, 0.0117647, 1 )
+emission_energy = 1.0
+emission_operator = 0
+emission_on_uv2 = false
+
+[sub_resource type="SphereMesh" id=2]
+material = SubResource( 1 )
+radius = 0.2
+height = 0.4
+radial_segments = 17
+rings = 1
+
+[node name="root" type="Spatial"]
+script = ExtResource( 7 )
+
+[node name="submenu" type="Control" parent="."]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = -47.0
+margin_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="panel" type="Panel" parent="submenu"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="hbox" type="HBoxContainer" parent="submenu/panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="host_game" type="Button" parent="submenu/panel/hbox"]
+visible = false
+margin_right = 510.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+text = "Become a DM"
+
+[node name="join_game" type="Button" parent="submenu/panel/hbox"]
+margin_right = 1024.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+text = "Join A DM"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ip_address" type="LineEdit" parent="submenu/panel/hbox"]
+visible = false
+margin_left = 684.0
+margin_right = 1024.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+text = "server.demetermine.com"
+align = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="circle" type="Button" parent="submenu/panel/hbox"]
+visible = false
+margin_left = 438.0
+margin_right = 580.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+text = "Circle"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="square" type="Button" parent="submenu/panel/hbox"]
+visible = false
+margin_left = 615.0
+margin_right = 816.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+text = "Square"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="make_object" type="Button" parent="submenu/panel/hbox"]
+visible = false
+margin_left = 771.0
+margin_right = 1024.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+text = "Add Mini"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="delete" type="Button" parent="submenu/panel/hbox"]
+visible = false
+margin_left = 855.0
+margin_right = 1024.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+disabled = true
+text = "Delete"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ping" type="Button" parent="submenu/panel/hbox"]
+visible = false
+margin_left = 771.0
+margin_right = 1024.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+toggle_mode = true
+text = "Ping"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="walls" type="Button" parent="submenu/panel/hbox"]
+visible = false
+margin_left = 912.0
+margin_right = 1024.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+toggle_mode = true
+pressed = true
+text = "Walls"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="uplevel" type="Button" parent="submenu/panel/hbox"]
+visible = false
+margin_left = 876.0
+margin_right = 1024.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+text = "Upstairs"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="downlevel" type="Button" parent="submenu/panel/hbox"]
+visible = false
+margin_left = 896.0
+margin_right = 1024.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+text = "Downstairs"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="floor" type="Label" parent="submenu/panel/hbox"]
+visible = false
+margin_left = 864.0
+margin_top = 17.0
+margin_right = 908.0
+margin_bottom = 31.0
+mouse_filter = 1
+text = "Floor 1"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="load" type="Button" parent="submenu/panel/hbox"]
+visible = false
+margin_left = 912.0
+margin_right = 1024.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+text = "Load Level"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="share" type="Button" parent="submenu/panel/hbox"]
+visible = false
+margin_left = 930.0
+margin_right = 1024.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+text = "Share Room"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="unhide" type="Button" parent="submenu/panel/hbox"]
+visible = false
+margin_left = 912.0
+margin_right = 1024.0
+margin_bottom = 48.0
+mouse_filter = 1
+size_flags_horizontal = 3
+text = "Unhide"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="menu" type="Control" parent="."]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_bottom = -45.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect" type="ColorRect" parent="menu"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -1.0
+margin_top = -1.0
+margin_right = -1.0
+margin_bottom = 51.0
+color = Color( 0, 0, 0, 0.27451 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="background_close" type="TextureButton" parent="menu/ColorRect"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 1.0
+margin_top = 1.0
+margin_right = 1.0
+margin_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="center" type="CenterContainer" parent="menu"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="panel" type="Panel" parent="menu/center"]
+margin_left = 162.0
+margin_top = 27.0
+margin_right = 862.0
+margin_bottom = 527.0
+rect_min_size = Vector2( 700, 500 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="color" type="ColorPicker" parent="menu/center/panel"]
+margin_left = 4.0
+margin_top = 4.0
+margin_right = 4.0
+margin_bottom = 4.0
+color = Color( 0.462745, 0.466667, 0.552941, 1 )
+edit_alpha = false
+presets_enabled = false
+presets_visible = false
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="name" type="LineEdit" parent="menu/center/panel"]
+margin_left = 332.0
+margin_top = 36.0
+margin_right = 680.0
+margin_bottom = 60.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label" type="Label" parent="menu/center/panel/name"]
+margin_left = 2.20532
+margin_top = -18.3773
+margin_right = 44.2053
+margin_bottom = -4.3773
+text = "Name:"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="size" type="LineEdit" parent="menu/center/panel"]
+margin_left = 336.211
+margin_top = 143.369
+margin_right = 684.211
+margin_bottom = 167.369
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="radius" type="Label" parent="menu/center/panel/size"]
+margin_left = 2.20532
+margin_top = -18.3773
+margin_right = 44.2053
+margin_bottom = -4.3773
+text = "Radius"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="edgelength" type="Label" parent="menu/center/panel/size"]
+margin_left = 2.20532
+margin_top = -18.3773
+margin_right = 44.2053
+margin_bottom = -4.3773
+text = "Size"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="style" type="OptionButton" parent="menu/center/panel"]
+margin_left = 338.754
+margin_top = 254.053
+margin_right = 671.754
+margin_bottom = 274.053
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label" type="Label" parent="menu/center/panel/style"]
+margin_left = 2.16144
+margin_top = -17.2915
+margin_right = 42.1614
+margin_bottom = -3.29152
+text = "Style:"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="create" type="Button" parent="menu/center/panel"]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = -44.0
+margin_right = -6.10352e-05
+margin_bottom = -3.05176e-05
+text = "Create"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="camera_origin" type="Spatial" parent="."]
+
+[node name="camera_pitch" type="Spatial" parent="camera_origin"]
+transform = Transform( 1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0.258, 0 )
+
+[node name="camera" type="Camera" parent="camera_origin/camera_pitch"]
+transform = Transform( 1, -7.45058e-09, 7.45058e-09, 0, 1, 2.98023e-08, 0, 0, 1, 0, 0, 10 )
+far = 200.0
+
+[node name="camera_center_mesh" type="MeshInstance" parent="camera_origin"]
+mesh = SubResource( 2 )
+material/0 = null
+
+[node name="gridmap" type="GridMap" parent="."]
+mesh_library = ExtResource( 6 )
+cell_center_y = false
+data = {
+"cells": PoolIntArray(  )
+}
+__meta__ = {
+"_editor_clip_": 0,
+"_editor_floor_": Vector3( 0, 0, 0 )
+}
+
+[node name="unshared_gridmap" type="GridMap" parent="."]
+mesh_library = ExtResource( 4 )
+cell_center_y = false
+data = {
+"cells": PoolIntArray(  )
+}
+__meta__ = {
+"_editor_clip_": 0,
+"_editor_floor_": Vector3( 0, 0, 0 )
+}
+
+[node name="DirectionalLight" type="DirectionalLight" parent="."]
+transform = Transform( 0.866025, 0.450999, -0.21587, 0, 0.431739, 0.901999, 0.5, -0.781154, 0.373897, 0, 3.31318, 0 )
+light_color = Color( 0.996078, 0.819608, 0.764706, 1 )
+shadow_enabled = true
+
+[node name="name_generator" type="Node" parent="."]
+script = ExtResource( 1 )
+[connection signal="mouse_entered" from="submenu/panel" to="." method="_on_panel_mouse_entered"]
+[connection signal="mouse_exited" from="submenu/panel" to="." method="_on_panel_mouse_exited"]
+[connection signal="pressed" from="submenu/panel/hbox/host_game" to="." method="_on_host_game_pressed"]
+[connection signal="pressed" from="submenu/panel/hbox/join_game" to="." method="_on_join_game_pressed"]
+[connection signal="pressed" from="submenu/panel/hbox/circle" to="." method="_on_circle_pressed"]
+[connection signal="pressed" from="submenu/panel/hbox/square" to="." method="_on_square_pressed"]
+[connection signal="pressed" from="submenu/panel/hbox/make_object" to="." method="_on_make_object_pressed"]
+[connection signal="pressed" from="submenu/panel/hbox/delete" to="." method="_on_delete_pressed"]
+[connection signal="toggled" from="submenu/panel/hbox/walls" to="." method="_on_walls_toggled"]
+[connection signal="pressed" from="submenu/panel/hbox/uplevel" to="." method="_on_uplevel_pressed"]
+[connection signal="pressed" from="submenu/panel/hbox/downlevel" to="." method="_on_downlevel_pressed"]
+[connection signal="pressed" from="submenu/panel/hbox/share" to="." method="_on_share_pressed"]
+[connection signal="pressed" from="submenu/panel/hbox/unhide" to="." method="_on_unhide_pressed"]
+[connection signal="pressed" from="menu/ColorRect/background_close" to="." method="_on_background_close_pressed"]
+[connection signal="pressed" from="menu/center/panel/create" to="." method="_on_create_pressed"]

@@ -1,0 +1,56 @@
+[gd_resource type="ShaderMaterial" load_steps=4 format=2]
+
+[sub_resource type="Shader" id=1]
+code = "shader_type spatial;
+render_mode cull_front;
+//render_mode blend_mix,depth_draw_opaque,cull_back,diffuse_burley,specular_schlick_ggx;
+
+
+uniform bool enable = true; // on and off switsch to diesable/enable the outline
+// outline costumization
+uniform float outline_thickness = 0.02; // how thick is the outline?
+uniform vec4 color1 : hint_color = vec4(0.0); // which color does the outline have?
+uniform vec4 color2 : hint_color = vec4(0.0); // which color does the outline have?
+uniform float brightness;
+uniform sampler2D noise : hint_albedo;
+
+void vertex() {
+	if (enable) {
+		float z_dist = clamp((MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).z * -1.0,0.0,50.0);
+		VERTEX += NORMAL*outline_thickness*z_dist;
+		VERTEX.y += outline_thickness*z_dist;
+	}
+}
+
+void fragment() {
+	if (enable) {
+		//float ratio = texture(noise, vec2(0.5, TIME/2.0)).r;
+		float ratio = abs(mod(TIME * 3.0,2.0)-1.0);
+		//vec3 col = color1.rgb * ratio + color2.rgb * (1.0-ratio);
+		vec3 col;
+		if (ratio > 0.5) {
+			col = color1.rgb;
+		}
+		else {
+			col = color2.rgb;
+		}
+		
+		ALBEDO = col; // apply the outlines color
+		EMISSION = col * brightness;
+	}
+}"
+
+[sub_resource type="OpenSimplexNoise" id=2]
+
+[sub_resource type="NoiseTexture" id=3]
+noise = SubResource( 2 )
+
+[resource]
+resource_local_to_scene = true
+shader = SubResource( 1 )
+shader_param/enable = false
+shader_param/outline_thickness = 0.01
+shader_param/color1 = Color( 1, 0.470588, 0, 1 )
+shader_param/color2 = Color( 0.721569, 0.721569, 0.721569, 1 )
+shader_param/brightness = 2.0
+shader_param/noise = SubResource( 3 )
