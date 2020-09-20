@@ -278,10 +278,10 @@ __meta__ = {
 }
 
 [node name="color" type="ColorPicker" parent="menu/center/panel"]
-margin_left = 4.0
-margin_top = 4.0
-margin_right = 4.0
-margin_bottom = 4.0
+margin_left = 8.0
+margin_top = 8.0
+margin_right = 8.0
+margin_bottom = 8.0
 color = Color( 0.462745, 0.466667, 0.552941, 1 )
 edit_alpha = false
 presets_enabled = false
