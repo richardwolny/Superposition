@@ -169,6 +169,10 @@ var velocity = Vector2()
 var tile_rotations = [0, 10, 16, 22]
 
 func _ready():
+	if OS.has_feature("dungeon_master") or OS.has_feature("editor"):
+		$submenu/panel/hbox/host_game.visible = true
+		$submenu/panel/hbox/ip_address.visible = true
+
 	for i in range(len(models)):
 		$menu/center/panel/style.add_item(models[i][0], i)
 
