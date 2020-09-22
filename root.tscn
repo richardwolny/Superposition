@@ -191,18 +191,6 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="load" type="Button" parent="submenu/panel/hbox"]
-visible = false
-margin_left = 912.0
-margin_right = 1024.0
-margin_bottom = 48.0
-mouse_filter = 1
-size_flags_horizontal = 3
-text = "Load Level"
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
 [node name="share" type="Button" parent="submenu/panel/hbox"]
 visible = false
 margin_left = 930.0
@@ -226,6 +214,50 @@ text = "Unhide"
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="MapControls" type="HBoxContainer" parent="."]
+visible = false
+margin_right = 40.0
+margin_bottom = 40.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="MapMenuButton" type="MenuButton" parent="MapControls"]
+margin_right = 82.0
+margin_bottom = 40.0
+text = "Select Map"
+flat = false
+items = [ "res://map_test.txt", null, 0, false, false, 0, 0, null, "", false, "res://map_mines.txt", null, 0, false, false, 1, 0, null, "", false, "res://map_plane.txt", null, 0, false, false, 2, 0, null, "", false ]
+
+[node name="LoadMapButton" type="Button" parent="MapControls"]
+margin_left = 86.0
+margin_right = 159.0
+margin_bottom = 40.0
+text = "Load Map"
+
+[node name="Label" type="Label" parent="MapControls"]
+margin_left = 163.0
+margin_top = 13.0
+margin_right = 245.0
+margin_bottom = 27.0
+text = "Current Map:"
+
+[node name="CurrentMapLabel" type="Label" parent="MapControls"]
+margin_left = 249.0
+margin_top = 13.0
+margin_right = 283.0
+margin_bottom = 27.0
+text = "None"
+
+[node name="FileDialog" type="FileDialog" parent="MapControls"]
+margin_right = 400.0
+margin_bottom = 400.0
+window_title = "Open a File"
+mode = 0
+access = 2
+current_dir = "/Users/Richard/Documents/Godot/Superposition"
+current_path = "/Users/Richard/Documents/Godot/Superposition/"
 
 [node name="menu" type="Control" parent="."]
 visible = false
@@ -424,5 +456,6 @@ script = ExtResource( 1 )
 [connection signal="pressed" from="submenu/panel/hbox/downlevel" to="." method="_on_downlevel_pressed"]
 [connection signal="pressed" from="submenu/panel/hbox/share" to="." method="_on_share_pressed"]
 [connection signal="pressed" from="submenu/panel/hbox/unhide" to="." method="_on_unhide_pressed"]
+[connection signal="pressed" from="MapControls/LoadMapButton" to="." method="_on_LoadMapButton_pressed"]
 [connection signal="pressed" from="menu/ColorRect/background_close" to="." method="_on_background_close_pressed"]
 [connection signal="pressed" from="menu/center/panel/create" to="." method="_on_create_pressed"]

@@ -172,6 +172,7 @@ func _ready():
 	if OS.has_feature("dungeon_master") or OS.has_feature("editor"):
 		$submenu/panel/hbox/host_game.visible = true
 		$submenu/panel/hbox/ip_address.visible = true
+		$MapControls/MapMenuButton.get_popup().connect("id_pressed", self, "_on_MapMenuButton_popup_id_pressed")
 
 	for i in range(len(models)):
 		$menu/center/panel/style.add_item(models[i][0], i)
@@ -194,16 +195,12 @@ func show_game_buttons():
 	$submenu/panel/hbox/walls.show()
 
 func show_dm_buttons():
-	$submenu/panel/hbox/load.show()
 	$submenu/panel/hbox/share.show()
 	$submenu/panel/hbox/unhide.show()
+	$MapControls.show()
 
 func host_game():
 	network.create_server()
-
-	load_room_from_file("vahlarot.txt")
-	#load_room_from_file("vahlarot_floor2.txt")
-
 	hide_connection_buttons()
 	show_game_buttons()
 	show_dm_buttons()
@@ -482,23 +479,21 @@ func new_sparse_tile(tile_type):
 	}
 
 
-
 const ignored_characters = ["A", " "]
-func load_room_from_file(filename):
-	var raw_tiles = load_file(filename)
 
-	var start_floor = -1
+func load_room_from_file(filename):
+	full_sparse_map = {}
+	shared_sparse_map = {}
+
+	var raw_tiles = load_file(filename)
 
 	# Array of xyz coordinates of things that have not yet been assigned to a room
 	var possible_rooms = []
-
 	var starts = []
-
+	var start_floor = -1
 
 	for z in range(len(raw_tiles)):
-
 		var start = [-1, -1]
-
 		# Find Start Bit
 		for y in range(len(raw_tiles[z])):
 			for x in range(len(raw_tiles[z][y])):
@@ -530,7 +525,6 @@ func load_room_from_file(filename):
 
 				# Regular Tile
 				if raw_tiles[tz][ty][tx] == "X" || raw_tiles[tz][ty][tx] == "B":
-
 
 					sparse_map_insert(full_sparse_map, x, y, z, new_sparse_tile("floor"))
 					possible_rooms.append([x,y,z])
@@ -564,7 +558,6 @@ func load_room_from_file(filename):
 					pass
 				else:
 					print("Found an unknown character at ", tx, ",", ty,",",tz,"[",raw_tiles[tz][ty][tx],"]")
-
 
 	# Populate Rotations
 	for z in full_sparse_map:
@@ -626,7 +619,6 @@ func load_room_from_file(filename):
 
 	# Assemble all of the tiles into rooms
 	while len(possible_rooms) > 0:
-
 		var built_room = build_room(
 			possible_rooms[0][0],
 			possible_rooms[0][1],
@@ -648,8 +640,6 @@ func load_room_from_file(filename):
 	for z in full_sparse_map:
 		for y in full_sparse_map[z]:
 			for x in full_sparse_map[z][y]:
-
-
 				var tile = full_sparse_map[z][y][x]
 				var up_tile = sparse_map_lookup(full_sparse_map, x, y+1, z)
 				var down_tile = sparse_map_lookup(full_sparse_map, x, y-1, z)
@@ -679,7 +669,6 @@ func load_room_from_file(filename):
 			for x in wall_sparsemap[z][y]:
 				sparse_map_insert(full_sparse_map, x, y, z, wall_sparsemap[z][y][x])
 	
-
 	# Reveal the first room
 	# print(rooms[sparse_map_lookup(full_sparse_map,0,0,0).rooms[0]])
 	share_room(sparse_map_lookup(full_sparse_map,0,0,0).rooms[0])
@@ -1199,3 +1188,14 @@ remotesync func unhide_tile_NETWORK(x,y,z):
 
 func _on_walls_toggled(button_pressed):
 	redraw_gridmap_tiles()
+
+
+func _on_MapMenuButton_popup_id_pressed(id):
+	var map_name = $MapControls/MapMenuButton.get_popup().get_item_text(id)
+	print(map_name)
+	$MapControls/CurrentMapLabel.text = map_name
+	load_room_from_file(map_name)
+
+
+func _on_LoadMapButton_pressed():
+	$MapControls/FileDialog.popup_centered()
