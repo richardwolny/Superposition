@@ -2,7 +2,7 @@ extends Node
 
 
 const DEFAULT_PORT = 31400
-const IS_SECURE = false
+const IS_SSL_ENABLED = true
 
 var players = {}
 
@@ -29,7 +29,7 @@ func _process(delta):
 func create_server():
 	self._server = WebSocketServer.new()
 
-	if IS_SECURE:
+	if IS_SSL_ENABLED:
 		var key = CryptoKey.new()
 		var cert = X509Certificate.new()
 		key.load("cert/privkey.pem")
@@ -57,7 +57,7 @@ func connect_to_server(ip_address):
 		print("Failed to connect \"server_disconnected\"")
 
 	self._client = WebSocketClient.new()
-	var prefix = "wss://" if IS_SECURE else "ws://"
+	var prefix = "wss://" if IS_SSL_ENABLED else "ws://"
 	var url = prefix + ip_address + ":" + str(DEFAULT_PORT)
 	self._client.connect_to_url(url, PoolStringArray(), true)
 	get_tree().set_network_peer(self._client)
