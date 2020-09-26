@@ -172,7 +172,6 @@ func _ready():
 	if OS.has_feature("dungeon_master") or OS.has_feature("editor"):
 		$submenu/panel/hbox/host_game.visible = true
 		$submenu/panel/hbox/ip_address.visible = true
-		$MapControls/MapMenuButton.get_popup().connect("id_pressed", self, "_on_MapMenuButton_popup_id_pressed")
 
 	for i in range(len(models)):
 		$menu/center/panel/style.add_item(models[i][0], i)
@@ -1190,12 +1189,6 @@ func _on_walls_toggled(button_pressed):
 	redraw_gridmap_tiles()
 
 
-func _on_MapMenuButton_popup_id_pressed(id):
-	var map_name = $MapControls/MapMenuButton.get_popup().get_item_text(id)
-	print(map_name)
-	$MapControls/CurrentMapLabel.text = map_name
-	load_room_from_file(map_name)
-
-
-func _on_LoadMapButton_pressed():
-	$MapControls/FileDialog.popup_centered()
+func _on_MapControls_map_changed(filename):
+	print("_on_MapControls_map_changed: " + filename)
+	load_room_from_file(filename)

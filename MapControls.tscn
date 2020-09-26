@@ -1,0 +1,49 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://MapControls.gd" type="Script" id=1]
+
+[node name="MapControls" type="HBoxContainer"]
+margin_right = 40.0
+margin_bottom = 40.0
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="MapMenuButton" type="MenuButton" parent="."]
+margin_right = 82.0
+margin_bottom = 40.0
+text = "Select Map"
+flat = false
+items = [ "res://map_test.txt", null, 0, false, false, 0, 0, null, "", false, "res://map_mines.txt", null, 0, false, false, 1, 0, null, "", false, "res://map_plane.txt", null, 0, false, false, 2, 0, null, "", false ]
+
+[node name="LoadMapButton" type="Button" parent="."]
+margin_left = 86.0
+margin_right = 159.0
+margin_bottom = 40.0
+text = "Load Map"
+
+[node name="Label" type="Label" parent="."]
+margin_left = 163.0
+margin_top = 13.0
+margin_right = 245.0
+margin_bottom = 27.0
+text = "Current Map:"
+
+[node name="CurrentMapLabel" type="Label" parent="."]
+margin_left = 249.0
+margin_top = 13.0
+margin_right = 283.0
+margin_bottom = 27.0
+text = "None"
+
+[node name="FileDialog" type="FileDialog" parent="."]
+margin_left = 287.0
+margin_right = 542.0
+margin_bottom = 130.0
+window_title = "Open a File"
+mode = 0
+access = 2
+current_dir = "/Users/Richard/Documents/Godot/Superposition"
+current_path = "/Users/Richard/Documents/Godot/Superposition/"
+[connection signal="pressed" from="LoadMapButton" to="." method="_on_LoadMapButton_pressed"]
