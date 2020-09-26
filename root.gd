@@ -16,7 +16,6 @@ var minis = {}
 var circles = {}
 var squares = {}
 
-
 var models = [
 	["Paladin", 1, 2.6, "paladin.tres"],
 	["Explorer", 1, 2.4, "explorer.tres"],
@@ -24,6 +23,34 @@ var models = [
 	["Big Monster", 2, 3.2, "bigmonster.tres"],
 	["Avallach", 1, 2.6, "avallach.tres"],
 ]
+
+var selected_object = null
+
+const speed = 10
+var velocity = Vector2()
+
+var tile_rotations = [0, 10, 16, 22]
+
+var current_floor = 0
+
+var shared_sparse_map = {}
+var full_sparse_map = {}
+# A list of all tile locations in a given room
+var rooms = []
+# A client side sparse list of rooms
+var shared_rooms = {}
+
+const tile_types = {
+	"floor": 0,
+	"door": 1,
+	"hiddendoor": 1,
+	"stairsup": 7,
+	"stairsdown": 6,
+	"start": 8,
+}
+
+const ignored_characters = ["A", " "]
+
 
 func get_targeted_tile(event, layer=0):
 	var camera = $camera_origin/camera_pitch/camera
@@ -55,9 +82,6 @@ func get_targeted_tile(event, layer=0):
 
 	return null
 
-
-
-var selected_object = null
 
 func deselect_object():
 
@@ -160,13 +184,6 @@ remotesync func ping_NETWORK(position):
 
 	self.add_child(ping)
 
-
-
-const speed = 10
-var velocity = Vector2()
-
-
-var tile_rotations = [0, 10, 16, 22]
 
 func _ready():
 	if OS.has_feature("dungeon_master") or OS.has_feature("editor"):
@@ -286,7 +303,7 @@ remotesync func share_room_NETWORK(room_index, tiles):
 
 	redraw_gridmap_tiles()
 
-var current_floor = 0
+
 func go_upstairs():
 	if selected_object != null:
 		deselect_object()
@@ -421,8 +438,6 @@ func hide_show_floor_objects():
 		squares[square].object.hide_show_on_floor()
 
 
-var shared_sparse_map = {}
-var full_sparse_map = {}
 func sparse_map_lookup(sparsemap, x, y, z):
 	x = int(x)
 	y = int(y)
@@ -453,22 +468,6 @@ func sparse_map_insert(sparsemap, x, y, z, value):
 	sparsemap[z][y][x] = value
 
 
-# A list of all tile locations in a given room
-var rooms = []
-# A client side sparse list of rooms
-var shared_rooms = {}
-
-
-const tile_types = {
-	"floor": 0,
-	"door": 1,
-	"hiddendoor": 1,
-	"stairsup": 7,
-	"stairsdown": 6,
-	"start": 8,
-}
-
-
 func new_sparse_tile(tile_type):
 	return {
 		"tile_type": tile_type,
@@ -478,11 +477,15 @@ func new_sparse_tile(tile_type):
 	}
 
 
-const ignored_characters = ["A", " "]
-
-func load_room_from_file(filename):
+remotesync func reset_map_NETWORK():
 	full_sparse_map = {}
 	shared_sparse_map = {}
+	rooms = []
+	shared_rooms = {}
+
+
+func load_room_from_file(filename):
+	rpc("reset_map_NETWORK")
 
 	var raw_tiles = load_file(filename)
 
