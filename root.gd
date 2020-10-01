@@ -857,7 +857,9 @@ func _on_background_close_pressed():
 # func get_closest_vertex_position(position):
 # 	pass
 
+
 func _on_create_pressed():
+	var id = str(get_tree().get_network_unique_id()) + "_" + str(randi())
 
 	if generator_type == "mini":
 		var style = $menu/center/panel/style.get_selected_id()
@@ -872,7 +874,7 @@ func _on_create_pressed():
 			position = Vector3(1,0,1)
 
 		rpc("create_mini",
-			str(randi()),
+			id,
 			$menu/center/panel/color.color,
 			style,
 			$menu/center/panel/name.text,
@@ -881,10 +883,8 @@ func _on_create_pressed():
 		)
 
 	if generator_type == "square":
-
 		var raw_size = int($menu/center/panel/size.text)
 		var tile_size = int(ceil(raw_size/5))
-
 
 		# print($camera_origin.translation)
 		var snapped_centerpoint = Vector3(
@@ -901,22 +901,19 @@ func _on_create_pressed():
 			)
 		# print( tile_size, snapped_centerpoint)
 
-
 		rpc("create_square",
-			str(randi()),
+			id,
 			$menu/center/panel/color.color,
 			tile_size,
 			$menu/center/panel/name.text,
 			current_floor,
 			snapped_centerpoint
 			)
-
 
 	if generator_type == "circle":
 		var raw_size = float($menu/center/panel/size.text)*2
 		var tile_size = int(ceil(raw_size/5))
 
-
 		# print($camera_origin.translation)
 		var snapped_centerpoint = Vector3(
 			floor($camera_origin.translation.x/2)*2+1,
@@ -932,9 +929,8 @@ func _on_create_pressed():
 			)
 		# print( tile_size, snapped_centerpoint)
 
-
 		rpc("create_circle",
-			str(randi()),
+			id,
 			$menu/center/panel/color.color,
 			tile_size,
 			$menu/center/panel/name.text,
@@ -942,11 +938,9 @@ func _on_create_pressed():
 			snapped_centerpoint
 			)
 
-
 	menu_open = false
 	generator_type = null
 	$menu.hide()
-
 
 
 func resend_objects():
@@ -983,9 +977,10 @@ func resend_objects():
 			circle.object.translation
 		)
 
-remotesync func create_mini(id, color, style, name, floor_number, position):
 
+remotesync func create_mini(id, color, style, name, floor_number, position):
 	if minis.has(id):
+		print("WARNING: mini id already exists!")
 		return
 
 	var mini = load("res://hero.tscn").instance()
@@ -1000,10 +995,8 @@ remotesync func create_mini(id, color, style, name, floor_number, position):
 	# print(models[style][3])
 	mini.get_node("mesh").mesh = load("res://mini_meshes/"+models[style][3])
 
-
 	var label = mini.get_node("name/viewport/name/center/label")
 	label.text = name
-
 
 	var hero_material = load("res://heromaterial.tres").duplicate()
 	var hero_material_glow = load("res://heromaterial_glow.tres").duplicate()
@@ -1020,7 +1013,6 @@ remotesync func create_mini(id, color, style, name, floor_number, position):
 	mini.floor_number = floor_number
 	mini.hide_show_on_floor()
 
-
 	minis[id] = {
 		"color": color,
 		"style": style,
@@ -1030,8 +1022,10 @@ remotesync func create_mini(id, color, style, name, floor_number, position):
 
 	redraw_gridmap_tiles()
 
+
 remotesync func create_square(id, color, size, name, floor_number, position):
 	if squares.has(id):
+		print("WARNING: square id already exists!")
 		return
 
 	var square = load("res://square_aoe.tscn").instance()
@@ -1060,7 +1054,6 @@ remotesync func create_square(id, color, size, name, floor_number, position):
 	label4.set("custom_colors/font_color", color)
 	label4.text = name
 
-
 	# Set the size
 	var viewport = square.get_node("sprite/viewport")
 	viewport.size.x = size * 200
@@ -1077,7 +1070,6 @@ remotesync func create_square(id, color, size, name, floor_number, position):
 	square.floor_number = floor_number
 	square.hide_show_on_floor()
 
-
 	squares[id] = {
 		"color": color,
 		"size": size,
@@ -1089,12 +1081,12 @@ remotesync func create_square(id, color, size, name, floor_number, position):
 
 remotesync func create_circle(id, color, size, name, floor_number, position):
 	if circles.has(id):
+		print("WARNING: circle id already exists!")
 		return
 
 	var circle = load("res://circle_aoe.tscn").instance()
 	circle.name = id
 	circle.tile_size = size
-
 
 	# Set the shader border color
 	var circle_material = circle.get_node("sprite/viewport/texture/sprite").material
@@ -1111,13 +1103,11 @@ remotesync func create_circle(id, color, size, name, floor_number, position):
 	label2.text = name
 
 	# Set the size
-
 	var viewport = circle.get_node("sprite/viewport")
 	viewport.size.x = size * 200
 	viewport.size.y = size * 200
 	var collision_shape = circle.get_node("collision_shape")
 	collision_shape.shape.radius = size
-
 
 	self.add_child(circle)
 
@@ -1134,8 +1124,6 @@ remotesync func create_circle(id, color, size, name, floor_number, position):
 		"floor_number": floor_number,
 		"object": circle
 	}
-
-
 
 
 func _on_share_pressed():
