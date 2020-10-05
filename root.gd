@@ -57,6 +57,9 @@ func _ready():
 		$submenu/panel/hbox/host_game.visible = true
 		$submenu/panel/hbox/ip_address.visible = true
 
+	if Network.connect('player_connected', self, '_on_Network_player_connected') != OK:
+		print("Failed to connect \"player_connected\"")
+
 	for i in range(len(models)):
 		$menu/center/panel/style.add_item(models[i][0], i)
 
@@ -170,6 +173,13 @@ func _process(delta):
 					should_disable_share_button = false
 
 		$submenu/panel/hbox/share.disabled = should_disable_share_button
+
+
+func _on_Network_player_connected():
+	print("player_connected")
+	if get_tree().is_network_server():
+		resend_shared_map()
+		resend_objects()
 
 
 func get_targeted_tile(event, layer=0):
