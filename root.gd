@@ -53,10 +53,6 @@ const ignored_characters = ["A", " "]
 
 
 func _ready():
-	if OS.has_feature("dungeon_master") or OS.has_feature("editor"):
-		$submenu/panel/hbox/host_game.visible = true
-		$submenu/panel/hbox/ip_address.visible = true
-
 	if Network.connect('player_connected', self, '_on_Network_player_connected') != OK:
 		print("Failed to connect \"player_connected\"")
 
@@ -182,6 +178,15 @@ func _on_Network_player_connected():
 		resend_objects()
 
 
+func _on_MainMenu_start_game():
+	$MainMenu.hide()
+	$submenu.show()
+	if get_tree().is_network_server():
+		$submenu/panel/hbox/share.show()
+		$submenu/panel/hbox/unhide.show()
+		$MapControls.show()
+
+
 func get_targeted_tile(event, layer=0):
 	var camera = $camera_origin/camera_pitch/camera
 	var start_coordinate = camera.project_ray_origin(event.position)
@@ -240,43 +245,6 @@ remotesync func ping_NETWORK(position):
 	ping.rotation.y = rand_range(0,2*PI)
 
 	self.add_child(ping)
-
-
-func hide_connection_buttons():
-	$submenu/panel/hbox/host_game.hide()
-	$submenu/panel/hbox/join_game.hide()
-	$submenu/panel/hbox/ip_address.hide()
-
-
-func show_game_buttons():
-	$submenu/panel/hbox/circle.show()
-	$submenu/panel/hbox/square.show()
-	$submenu/panel/hbox/ping.show()
-	$submenu/panel/hbox/make_object.show()
-	$submenu/panel/hbox/delete.show()
-	$submenu/panel/hbox/uplevel.show()
-	$submenu/panel/hbox/downlevel.show()
-	$submenu/panel/hbox/floor.show()
-	$submenu/panel/hbox/walls.show()
-
-
-func show_dm_buttons():
-	$submenu/panel/hbox/share.show()
-	$submenu/panel/hbox/unhide.show()
-	$MapControls.show()
-
-
-func host_game():
-	Network.create_server()
-	hide_connection_buttons()
-	show_game_buttons()
-	show_dm_buttons()
-
-
-func connect_to_game():
-	Network.connect_to_server($submenu/panel/hbox/ip_address.text)
-	hide_connection_buttons()
-	show_game_buttons()
 
 
 func share_room(room_index):
@@ -768,16 +736,6 @@ func _on_panel_mouse_exited():
 func _on_delete_pressed():
 	selected_object.delete()
 	redraw_gridmap_tiles()
-
-
-func _on_host_game_pressed():
-	_on_panel_mouse_exited()
-	host_game()
-
-
-func _on_join_game_pressed():
-	_on_panel_mouse_exited()
-	connect_to_game()
 
 
 func _on_make_object_pressed():

@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://name_generator.gd" type="Script" id=1]
 [ext_resource path="res://MapControls.tscn" type="PackedScene" id=2]
+[ext_resource path="res://main_menu.tscn" type="PackedScene" id=3]
 [ext_resource path="res://unsharedstructures.tres" type="MeshLibrary" id=4]
 [ext_resource path="res://structures.tres" type="MeshLibrary" id=6]
 [ext_resource path="res://root.gd" type="Script" id=7]
@@ -24,7 +25,10 @@ rings = 1
 [node name="root" type="Spatial"]
 script = ExtResource( 7 )
 
+[node name="MainMenu" parent="." instance=ExtResource( 3 )]
+
 [node name="submenu" type="Control" parent="."]
+visible = false
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -49,41 +53,8 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="host_game" type="Button" parent="submenu/panel/hbox"]
-visible = false
-margin_right = 510.0
-margin_bottom = 48.0
-mouse_filter = 1
-size_flags_horizontal = 3
-text = "Become a DM"
-
-[node name="join_game" type="Button" parent="submenu/panel/hbox"]
-margin_right = 1024.0
-margin_bottom = 48.0
-mouse_filter = 1
-size_flags_horizontal = 3
-text = "Join A DM"
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="ip_address" type="LineEdit" parent="submenu/panel/hbox"]
-visible = false
-margin_left = 684.0
-margin_right = 1024.0
-margin_bottom = 48.0
-mouse_filter = 1
-size_flags_horizontal = 3
-text = "server.demetermine.com"
-align = 1
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
 [node name="circle" type="Button" parent="submenu/panel/hbox"]
-visible = false
-margin_left = 438.0
-margin_right = 580.0
+margin_right = 94.0
 margin_bottom = 48.0
 mouse_filter = 1
 size_flags_horizontal = 3
@@ -93,9 +64,8 @@ __meta__ = {
 }
 
 [node name="square" type="Button" parent="submenu/panel/hbox"]
-visible = false
-margin_left = 615.0
-margin_right = 816.0
+margin_left = 98.0
+margin_right = 192.0
 margin_bottom = 48.0
 mouse_filter = 1
 size_flags_horizontal = 3
@@ -105,9 +75,8 @@ __meta__ = {
 }
 
 [node name="make_object" type="Button" parent="submenu/panel/hbox"]
-visible = false
-margin_left = 771.0
-margin_right = 1024.0
+margin_left = 196.0
+margin_right = 290.0
 margin_bottom = 48.0
 mouse_filter = 1
 size_flags_horizontal = 3
@@ -117,9 +86,8 @@ __meta__ = {
 }
 
 [node name="delete" type="Button" parent="submenu/panel/hbox"]
-visible = false
-margin_left = 855.0
-margin_right = 1024.0
+margin_left = 294.0
+margin_right = 388.0
 margin_bottom = 48.0
 mouse_filter = 1
 size_flags_horizontal = 3
@@ -130,9 +98,8 @@ __meta__ = {
 }
 
 [node name="ping" type="Button" parent="submenu/panel/hbox"]
-visible = false
-margin_left = 771.0
-margin_right = 1024.0
+margin_left = 392.0
+margin_right = 486.0
 margin_bottom = 48.0
 mouse_filter = 1
 size_flags_horizontal = 3
@@ -143,9 +110,8 @@ __meta__ = {
 }
 
 [node name="walls" type="Button" parent="submenu/panel/hbox"]
-visible = false
-margin_left = 912.0
-margin_right = 1024.0
+margin_left = 490.0
+margin_right = 584.0
 margin_bottom = 48.0
 mouse_filter = 1
 size_flags_horizontal = 3
@@ -157,9 +123,8 @@ __meta__ = {
 }
 
 [node name="uplevel" type="Button" parent="submenu/panel/hbox"]
-visible = false
-margin_left = 876.0
-margin_right = 1024.0
+margin_left = 588.0
+margin_right = 682.0
 margin_bottom = 48.0
 mouse_filter = 1
 size_flags_horizontal = 3
@@ -169,9 +134,8 @@ __meta__ = {
 }
 
 [node name="downlevel" type="Button" parent="submenu/panel/hbox"]
-visible = false
-margin_left = 896.0
-margin_right = 1024.0
+margin_left = 686.0
+margin_right = 780.0
 margin_bottom = 48.0
 mouse_filter = 1
 size_flags_horizontal = 3
@@ -181,10 +145,9 @@ __meta__ = {
 }
 
 [node name="floor" type="Label" parent="submenu/panel/hbox"]
-visible = false
-margin_left = 864.0
+margin_left = 784.0
 margin_top = 17.0
-margin_right = 908.0
+margin_right = 828.0
 margin_bottom = 31.0
 mouse_filter = 1
 text = "Floor 1"
@@ -194,8 +157,8 @@ __meta__ = {
 
 [node name="share" type="Button" parent="submenu/panel/hbox"]
 visible = false
-margin_left = 930.0
-margin_right = 1024.0
+margin_left = 832.0
+margin_right = 926.0
 margin_bottom = 48.0
 mouse_filter = 1
 size_flags_horizontal = 3
@@ -206,7 +169,7 @@ __meta__ = {
 
 [node name="unhide" type="Button" parent="submenu/panel/hbox"]
 visible = false
-margin_left = 912.0
+margin_left = 930.0
 margin_right = 1024.0
 margin_bottom = 48.0
 mouse_filter = 1
@@ -403,10 +366,9 @@ shadow_enabled = true
 
 [node name="name_generator" type="Node" parent="."]
 script = ExtResource( 1 )
+[connection signal="start_game" from="MainMenu" to="." method="_on_MainMenu_start_game"]
 [connection signal="mouse_entered" from="submenu/panel" to="." method="_on_panel_mouse_entered"]
 [connection signal="mouse_exited" from="submenu/panel" to="." method="_on_panel_mouse_exited"]
-[connection signal="pressed" from="submenu/panel/hbox/host_game" to="." method="_on_host_game_pressed"]
-[connection signal="pressed" from="submenu/panel/hbox/join_game" to="." method="_on_join_game_pressed"]
 [connection signal="pressed" from="submenu/panel/hbox/circle" to="." method="_on_circle_pressed"]
 [connection signal="pressed" from="submenu/panel/hbox/square" to="." method="_on_square_pressed"]
 [connection signal="pressed" from="submenu/panel/hbox/make_object" to="." method="_on_make_object_pressed"]
