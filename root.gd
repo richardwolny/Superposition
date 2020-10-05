@@ -52,6 +52,126 @@ const tile_types = {
 const ignored_characters = ["A", " "]
 
 
+func _ready():
+	if OS.has_feature("dungeon_master") or OS.has_feature("editor"):
+		$submenu/panel/hbox/host_game.visible = true
+		$submenu/panel/hbox/ip_address.visible = true
+
+	for i in range(len(models)):
+		$menu/center/panel/style.add_item(models[i][0], i)
+
+
+func _input(event):
+	if over_menubar || menu_open:
+		return
+
+	if event is InputEventMouseButton:
+		if event.pressed:
+			if event.button_index == BUTTON_WHEEL_UP:
+				$camera_origin/camera_pitch/camera.translation.z -= zoom_speed
+				if ($camera_origin/camera_pitch/camera.translation.z < 0):
+					$camera_origin/camera_pitch/camera.translation.z = 0
+			elif event.button_index == BUTTON_WHEEL_DOWN:
+				$camera_origin/camera_pitch/camera.translation.z += zoom_speed
+			elif event.button_index == BUTTON_RIGHT:
+				pressed = true
+				# print("Mouse Click at:", event.position)
+				Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+			elif event.button_index == BUTTON_LEFT:
+				var target_tile = get_targeted_tile(event)
+
+				# If an object is selected then move it to the location
+				if selected_object != null:
+					# print("found a selected object")
+					if target_tile != null:
+						selected_object.move_to(target_tile, current_floor)
+						# print("moving object", target_tile, selected_object)
+						deselect_object()
+				elif $submenu/panel/hbox/ping.pressed:
+					rpc("ping_NETWORK", target_tile)
+				else:
+					# print("no selected objects")
+					var camera = $camera_origin/camera_pitch/camera
+					var start_coordinate = camera.project_ray_origin(event.position)
+					var end_coordinate = start_coordinate + camera.project_ray_normal(event.position) * ray_length
+					var space_state = get_world().direct_space_state
+					var result = space_state.intersect_ray(start_coordinate, end_coordinate)
+					if result:
+						# print("Hit", result.collider)
+						if result.collider.has_method("set_object_selected"):
+							select_object(result.collider)
+						else:
+							pass
+							# print("Hit not found")
+		else:
+			if event.button_index == BUTTON_RIGHT:
+				pressed = false
+				# print("Mouse Unclick at:", event.position)
+				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	elif event is InputEventMouseMotion:
+		if pressed:
+			# Horizontal Movement
+			$camera_origin.rotate(Vector3(0,1,0), -event.relative.x * mouse_speed)
+
+			# Bounded Vertical Movement
+			var x_rotate_distance = -event.relative.y * mouse_speed
+			if $camera_origin/camera_pitch.rotation.x + x_rotate_distance >= PI/2:
+				x_rotate_distance = PI/2 - $camera_origin/camera_pitch.rotation.x
+			if $camera_origin/camera_pitch.rotation.x + x_rotate_distance <= -PI/2:
+				x_rotate_distance = -PI/2 - $camera_origin/camera_pitch.rotation.x
+			$camera_origin/camera_pitch.rotate_object_local(Vector3(1,0,0), x_rotate_distance)
+
+	# velocity = Vector2(1, 0).rotated(rotation) * run_speed
+
+
+func _process(delta):
+	if !get_tree().has_network_peer():
+		return
+
+	var strafe_left = Input.is_action_pressed("ui_left");
+	var strafe_right = Input.is_action_pressed("ui_right");
+	var move_foward = Input.is_action_pressed("ui_up");
+	var move_backward = Input.is_action_pressed("ui_down");
+
+	var local_direction = Vector2(0,0)
+
+	if move_foward:
+		local_direction += Vector2(-1,0)
+	if strafe_left:
+		local_direction += Vector2(0,-1)
+	if strafe_right:
+		local_direction += Vector2(0,1)
+	if move_backward:
+		local_direction += Vector2(1,0)
+
+	if local_direction != Vector2(0,0)  && !menu_open:
+		velocity = local_direction.normalized().rotated($camera_origin.rotation.y) * ($camera_origin/camera_pitch/camera.translation.z*camera_speed_mod+1) * speed * delta
+		$camera_origin.translation.x += velocity.y
+		$camera_origin.translation.z += velocity.x
+
+	if get_tree().is_network_server():
+		var x = int(floor($camera_origin.translation.x/2))
+		var y = int(floor($camera_origin.translation.z/2))
+		var z = current_floor
+
+		var shared_tile = sparse_map_lookup(shared_sparse_map,x,y,z)
+		var full_tile = sparse_map_lookup(full_sparse_map,x,y,z)
+
+		if shared_tile != null && shared_tile.hidden:
+			$submenu/panel/hbox/unhide.disabled = false
+		else:
+			$submenu/panel/hbox/unhide.disabled = true
+
+		var should_disable_share_button = true
+
+		if full_tile != null:
+			for room in full_tile.rooms:
+				if !shared_rooms.has(room):
+					should_disable_share_button = false
+
+		$submenu/panel/hbox/share.disabled = should_disable_share_button
+
+
 func get_targeted_tile(event, layer=0):
 	var camera = $camera_origin/camera_pitch/camera
 	var start_coordinate = camera.project_ray_origin(event.position)
@@ -109,72 +229,6 @@ func select_object(object):
 	$submenu/panel/hbox/delete.disabled = false
 
 
-func _input(event):
-	if over_menubar || menu_open:
-		return
-	if event is InputEventMouseButton:
-		if event.pressed:
-
-			if event.button_index == BUTTON_WHEEL_UP:
-				$camera_origin/camera_pitch/camera.translation.z -= zoom_speed
-				if ($camera_origin/camera_pitch/camera.translation.z < 0):
-					$camera_origin/camera_pitch/camera.translation.z = 0
-			elif event.button_index == BUTTON_WHEEL_DOWN:
-				$camera_origin/camera_pitch/camera.translation.z += zoom_speed
-			elif event.button_index == BUTTON_RIGHT:
-				pressed = true
-				# print("Mouse Click at:", event.position)
-				Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-			elif event.button_index == BUTTON_LEFT:
-
-				var target_tile = get_targeted_tile(event)
-
-				# If an object is selected then move it to the location
-				if selected_object != null:
-					# print("found a selected object")
-					if target_tile != null:
-						selected_object.move_to(target_tile, current_floor)
-						# print("moving object", target_tile, selected_object)
-						deselect_object()
-				elif $submenu/panel/hbox/ping.pressed:
-					rpc("ping_NETWORK", target_tile)
-				else:
-					# print("no selected objects")
-					var camera = $camera_origin/camera_pitch/camera
-					var start_coordinate = camera.project_ray_origin(event.position)
-					var end_coordinate = start_coordinate + camera.project_ray_normal(event.position) * ray_length
-					var space_state = get_world().direct_space_state
-					var result = space_state.intersect_ray(start_coordinate, end_coordinate)
-					if result:
-						# print("Hit", result.collider)
-						if result.collider.has_method("set_object_selected"):
-							select_object(result.collider)
-						else:
-							pass
-							# print("Hit not found")
-
-		else:
-			if event.button_index == BUTTON_RIGHT:
-				pressed = false
-				# print("Mouse Unclick at:", event.position)
-				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-
-	elif event is InputEventMouseMotion:
-		if pressed:
-			# Horizontal Movement
-			$camera_origin.rotate(Vector3(0,1,0), -event.relative.x * mouse_speed)
-
-			# Bounded Vertical Movement
-			var x_rotate_distance = -event.relative.y * mouse_speed
-			if $camera_origin/camera_pitch.rotation.x + x_rotate_distance >= PI/2:
-				x_rotate_distance = PI/2 - $camera_origin/camera_pitch.rotation.x
-			if $camera_origin/camera_pitch.rotation.x + x_rotate_distance <= -PI/2:
-				x_rotate_distance = -PI/2 - $camera_origin/camera_pitch.rotation.x
-			$camera_origin/camera_pitch.rotate_object_local(Vector3(1,0,0), x_rotate_distance)
-
-	# velocity = Vector2(1, 0).rotated(rotation) * run_speed
-
-
 remotesync func ping_NETWORK(position):
 	var ping = load("res://ping.tscn").instance()
 	ping.translation.x = position.x
@@ -183,15 +237,6 @@ remotesync func ping_NETWORK(position):
 	ping.rotation.y = rand_range(0,2*PI)
 
 	self.add_child(ping)
-
-
-func _ready():
-	if OS.has_feature("dungeon_master") or OS.has_feature("editor"):
-		$submenu/panel/hbox/host_game.visible = true
-		$submenu/panel/hbox/ip_address.visible = true
-
-	for i in range(len(models)):
-		$menu/center/panel/style.add_item(models[i][0], i)
 
 
 func hide_connection_buttons():
@@ -216,67 +261,15 @@ func show_dm_buttons():
 	$MapControls.show()
 
 func host_game():
-	network.create_server()
+	Network.create_server()
 	hide_connection_buttons()
 	show_game_buttons()
 	show_dm_buttons()
 
 func connect_to_game():
-	network.connect_to_server($submenu/panel/hbox/ip_address.text)
+	Network.connect_to_server($submenu/panel/hbox/ip_address.text)
 	hide_connection_buttons()
 	show_game_buttons()
-
-func _process(delta):
-
-	if !get_tree().has_network_peer():
-		return
-
-	var strafe_left = Input.is_action_pressed("ui_left");
-	var strafe_right = Input.is_action_pressed("ui_right");
-	var move_foward = Input.is_action_pressed("ui_up");
-	var move_backward = Input.is_action_pressed("ui_down");
-
-	var local_direction = Vector2(0,0)
-
-	if move_foward:
-		local_direction += Vector2(-1,0)
-	if strafe_left:
-		local_direction += Vector2(0,-1)
-	if strafe_right:
-		local_direction += Vector2(0,1)
-	if move_backward:
-		local_direction += Vector2(1,0)
-
-	if local_direction != Vector2(0,0)  && !menu_open:
-		velocity = local_direction.normalized().rotated($camera_origin.rotation.y) * ($camera_origin/camera_pitch/camera.translation.z*camera_speed_mod+1) * speed * delta
-		$camera_origin.translation.x += velocity.y
-		$camera_origin.translation.z += velocity.x
-
-	if get_tree().is_network_server():
-		var x = int(floor($camera_origin.translation.x/2))
-		var y = int(floor($camera_origin.translation.z/2))
-		var z = current_floor
-
-		var shared_tile = sparse_map_lookup(shared_sparse_map,x,y,z)
-		var full_tile = sparse_map_lookup(full_sparse_map,x,y,z)
-
-
-		if shared_tile != null && shared_tile.hidden:
-			$submenu/panel/hbox/unhide.disabled = false
-		else:
-			$submenu/panel/hbox/unhide.disabled = true
-
-
-
-
-		var should_disable_share_button = true
-
-		if full_tile != null:
-			for room in full_tile.rooms:
-				if !shared_rooms.has(room):
-					should_disable_share_button = false
-
-		$submenu/panel/hbox/share.disabled = should_disable_share_button
 
 
 func share_room(room_index):
