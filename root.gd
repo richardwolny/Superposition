@@ -157,9 +157,9 @@ func _process(delta):
 		var full_tile = sparse_map_lookup(full_sparse_map,x,y,z)
 
 		if shared_tile != null && shared_tile.hidden:
-			$submenu/panel/hbox/unhide.disabled = false
+			$DmControls.set_unhide_tile_disabled(false)
 		else:
-			$submenu/panel/hbox/unhide.disabled = true
+			$DmControls.set_unhide_tile_disabled(true)
 
 		var should_disable_share_button = true
 
@@ -168,7 +168,7 @@ func _process(delta):
 				if !shared_rooms.has(room):
 					should_disable_share_button = false
 
-		$submenu/panel/hbox/share.disabled = should_disable_share_button
+		$DmControls.set_share_room_disabled(should_disable_share_button)
 
 
 func _on_Network_player_connected():
@@ -182,9 +182,39 @@ func _on_MainMenu_start_game():
 	$MainMenu.hide()
 	$submenu.show()
 	if get_tree().is_network_server():
-		$submenu/panel/hbox/share.show()
-		$submenu/panel/hbox/unhide.show()
-		$MapControls.show()
+		$DmControls.show()
+
+
+func _on_DmControls_map_changed(filename):
+	print("_on_MapControls_map_changed: " + filename)
+	load_room_from_file(filename)
+
+
+func _on_DmControls_share_room():
+		# Try to get what tile the camera center is currently on
+	# Share all the rooms that tile belongs to
+	var x = int(floor($camera_origin.translation.x/2))
+	var y = int(floor($camera_origin.translation.z/2))
+	var z = current_floor
+
+	var tile = sparse_map_lookup(full_sparse_map,x,y,z)
+
+	if tile == null:
+		# print("No Tile to Share")
+		return
+
+	var rooms = tile.rooms;
+	for room in rooms:
+		share_room(room)
+
+
+func _on_DmControls_unhide_tile():
+	var x = int(floor($camera_origin.translation.x/2))
+	var y = int(floor($camera_origin.translation.z/2))
+	var z = current_floor
+
+	rpc("unhide_tile_NETWORK", x, y, z)
+	$DmControls.set_unhide_tile_disabled(true)
 
 
 func get_targeted_tile(event, layer=0):
@@ -1053,40 +1083,12 @@ remotesync func create_circle(id, color, size, name, floor_number, position):
 	}
 
 
-func _on_share_pressed():
-	# Try to get what tile the camera center is currently on
-	# Share all the rooms that tile belongs to
-	var x = int(floor($camera_origin.translation.x/2))
-	var y = int(floor($camera_origin.translation.z/2))
-	var z = current_floor
-
-	var tile = sparse_map_lookup(full_sparse_map,x,y,z)
-
-	if tile == null:
-		# print("No Tile to Share")
-		return
-
-	var rooms = tile.rooms;
-	for room in rooms:
-		share_room(room)
-
-
 func _on_uplevel_pressed():
 	go_upstairs()
 
 
 func _on_downlevel_pressed():
 	go_downstairs()
-
-
-func _on_unhide_pressed():
-	var x = int(floor($camera_origin.translation.x/2))
-	var y = int(floor($camera_origin.translation.z/2))
-	var z = current_floor
-
-	rpc("unhide_tile_NETWORK", x, y, z)
-
-	$submenu/panel/hbox/unhide.disabled = true
 
 
 remotesync func unhide_tile_NETWORK(x,y,z):
@@ -1097,8 +1099,3 @@ remotesync func unhide_tile_NETWORK(x,y,z):
 
 func _on_walls_toggled(button_pressed):
 	redraw_gridmap_tiles()
-
-
-func _on_MapControls_map_changed(filename):
-	print("_on_MapControls_map_changed: " + filename)
-	load_room_from_file(filename)

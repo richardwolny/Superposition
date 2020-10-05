@@ -1,9 +1,9 @@
 [gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://name_generator.gd" type="Script" id=1]
-[ext_resource path="res://MapControls.tscn" type="PackedScene" id=2]
 [ext_resource path="res://main_menu.tscn" type="PackedScene" id=3]
 [ext_resource path="res://unsharedstructures.tres" type="MeshLibrary" id=4]
+[ext_resource path="res://dm_controls.tscn" type="PackedScene" id=5]
 [ext_resource path="res://structures.tres" type="MeshLibrary" id=6]
 [ext_resource path="res://root.gd" type="Script" id=7]
 
@@ -155,33 +155,6 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="share" type="Button" parent="submenu/panel/hbox"]
-visible = false
-margin_left = 832.0
-margin_right = 926.0
-margin_bottom = 48.0
-mouse_filter = 1
-size_flags_horizontal = 3
-text = "Share Room"
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="unhide" type="Button" parent="submenu/panel/hbox"]
-visible = false
-margin_left = 930.0
-margin_right = 1024.0
-margin_bottom = 48.0
-mouse_filter = 1
-size_flags_horizontal = 3
-text = "Unhide"
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="MapControls" parent="." instance=ExtResource( 2 )]
-visible = false
-
 [node name="menu" type="Control" parent="."]
 visible = false
 anchor_right = 1.0
@@ -324,6 +297,9 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="DmControls" parent="." instance=ExtResource( 5 )]
+visible = false
+
 [node name="camera_origin" type="Spatial" parent="."]
 
 [node name="camera_pitch" type="Spatial" parent="camera_origin"]
@@ -376,8 +352,8 @@ script = ExtResource( 1 )
 [connection signal="toggled" from="submenu/panel/hbox/walls" to="." method="_on_walls_toggled"]
 [connection signal="pressed" from="submenu/panel/hbox/uplevel" to="." method="_on_uplevel_pressed"]
 [connection signal="pressed" from="submenu/panel/hbox/downlevel" to="." method="_on_downlevel_pressed"]
-[connection signal="pressed" from="submenu/panel/hbox/share" to="." method="_on_share_pressed"]
-[connection signal="pressed" from="submenu/panel/hbox/unhide" to="." method="_on_unhide_pressed"]
-[connection signal="map_changed" from="MapControls" to="." method="_on_MapControls_map_changed"]
 [connection signal="pressed" from="menu/ColorRect/background_close" to="." method="_on_background_close_pressed"]
 [connection signal="pressed" from="menu/center/panel/create" to="." method="_on_create_pressed"]
+[connection signal="map_changed" from="DmControls" to="." method="_on_DmControls_map_changed"]
+[connection signal="share_room" from="DmControls" to="." method="_on_DmControls_share_room"]
+[connection signal="unhide_tile" from="DmControls" to="." method="_on_DmControls_unhide_tile"]
