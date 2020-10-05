@@ -188,23 +188,19 @@ func get_targeted_tile(event, layer=0):
 	var z2 = float(direction.z)
 
 	if (x2 != 0 && y2 != 0 && z2 != 0):
-
 		var x_slope = y2/x2
 		var z_slope = y2/z2
 		var x_at_zero = layer-(y1-x_slope*x1) / x_slope
 		var z_at_zero = layer-(y1-z_slope*z1) / z_slope
 
 		return Vector3(x_at_zero, layer, z_at_zero)
-
 	else:
 		print("Caught a div by zero in tile lookup")
-
 
 	return null
 
 
 func deselect_object():
-
 	selected_object.set_object_deselected()
 
 	# var surface_material = selected_object.get_node("mesh").get_surface_material(0)
@@ -212,18 +208,15 @@ func deselect_object():
 	# surface_material.next_pass.set_shader_param("enable", false)
 
 	selected_object = null
-
 	$submenu/panel/hbox/delete.disabled = true
 
+
 func select_object(object):
-
 	object.set_object_selected()
-
 
 	# var surface_material = object.get_node("mesh").get_surface_material(0)
 	# surface_material.set_shader_param("enable", true)
 	# surface_material.next_pass.set_shader_param("enable", true)
-
 
 	selected_object = object
 	$submenu/panel/hbox/delete.disabled = false
@@ -244,6 +237,7 @@ func hide_connection_buttons():
 	$submenu/panel/hbox/join_game.hide()
 	$submenu/panel/hbox/ip_address.hide()
 
+
 func show_game_buttons():
 	$submenu/panel/hbox/circle.show()
 	$submenu/panel/hbox/square.show()
@@ -255,16 +249,19 @@ func show_game_buttons():
 	$submenu/panel/hbox/floor.show()
 	$submenu/panel/hbox/walls.show()
 
+
 func show_dm_buttons():
 	$submenu/panel/hbox/share.show()
 	$submenu/panel/hbox/unhide.show()
 	$MapControls.show()
+
 
 func host_game():
 	Network.create_server()
 	hide_connection_buttons()
 	show_game_buttons()
 	show_dm_buttons()
+
 
 func connect_to_game():
 	Network.connect_to_server($submenu/panel/hbox/ip_address.text)
@@ -306,6 +303,7 @@ func go_upstairs():
 	hide_show_floor_objects()
 	$submenu/panel/hbox/floor.text = "Floor " + str(current_floor+1)
 
+
 func go_downstairs():
 	if selected_object != null:
 		deselect_object()
@@ -315,23 +313,20 @@ func go_downstairs():
 	hide_show_floor_objects()
 	$submenu/panel/hbox/floor.text = "Floor " + str(current_floor+1)
 
+
 # This is slightly wrong right now but that is ok I will fix it later
 func redraw_gridmap_tiles():
-
 	$gridmap.clear()
 	$unshared_gridmap.clear()
-
 
 	var visible_tiles = {}
 	for mini_id in minis:
 		var mini_x = floor(minis[mini_id].object.transform.origin.x/2)
 		var mini_y = floor(minis[mini_id].object.transform.origin.z/2)
 		var mini_z = floor(minis[mini_id].object.floor_number)
-
 		# print("Mini Coordinates", mini_x, mini_y, mini_z)
 
 		var mini_tile = sparse_map_lookup(shared_sparse_map, mini_x, mini_y, mini_z )
-
 		# print("mini tile", mini_tile)
 
 		if mini_tile != null:
@@ -342,7 +337,6 @@ func redraw_gridmap_tiles():
 	
 	if get_tree().is_network_server():
 		visible_tiles = shared_sparse_map
-
 
 	# for z in shared_sparse_map:
 	var z = current_floor
@@ -355,9 +349,7 @@ func redraw_gridmap_tiles():
 
 				if tile.hidden || tile.tile_type == "wall":
 					if $submenu/panel/hbox/walls.pressed:
-
 						# up,down,left,right
-
 						var up_tile = sparse_map_lookup(visible_tiles, x, y+1, z)
 						var down_tile = sparse_map_lookup(visible_tiles, x, y-1, z)
 						var left_tile = sparse_map_lookup(visible_tiles, x+1, y, z)
@@ -368,7 +360,6 @@ func redraw_gridmap_tiles():
 							key += "0"
 						else:
 							key += "1"
-
 
 						if down_tile == null || down_tile.tile_type == "wall" || down_tile.hidden:
 							key += "0"
@@ -406,7 +397,6 @@ func redraw_gridmap_tiles():
 							"0011": [5, 2],
 						}
 						$gridmap.set_cell_item (x, 0, y, rotation_mapping[key][0], tile_rotations[rotation_mapping[key][1]])
-
 				else:
 					$gridmap.set_cell_item (x, 0, y, tile_types[tile.tile_type], tile_rotations[tile.rotation])
 
@@ -414,8 +404,6 @@ func redraw_gridmap_tiles():
 	if full_sparse_map.has(z):
 		for y in full_sparse_map[z]:
 			for x in full_sparse_map[z][y]:
-
-
 				var unshared_tile = sparse_map_lookup(full_sparse_map, x,y,z)
 
 				if (sparse_map_lookup(shared_sparse_map, x,y,z) == null || unshared_tile.hidden) && unshared_tile.tile_type != "wall":
@@ -674,15 +662,12 @@ func build_room(x,y,z, sparsemap, room):
 	y = int(y)
 	z = int(z)
 
-
 	var tile = sparse_map_lookup(sparsemap, x,y,z)
 	if tile == null:
 		return room
 
 	if room.has([x,y,z]):
-
 		return room
-
 	elif tile.tile_type == "floor" || tile.tile_type == "start":
 		room.append([x,y,z])
 		room = build_room(x+1, y, z, sparsemap, room)
@@ -690,32 +675,23 @@ func build_room(x,y,z, sparsemap, room):
 		room = build_room(x, y+1, z, sparsemap, room)
 		room = build_room(x, y-1, z, sparsemap, room)
 		return room
-
 	elif tile.tile_type == "door" || tile.tile_type == "hiddendoor":
 		room.append([x,y,z])
 		return room
-
 	elif tile.tile_type == "stairsup":
 		if sparse_map_lookup(sparsemap, x, y, z+1).tile_type != "stairsdown":
 			print("ERROR: NON MATCHING STAIRS")
-
 		room.append([x,y,z])
 		room.append([x,y,z+1])
 		return room
-
 	elif tile.tile_type == "stairsdown":
 		if sparse_map_lookup(sparsemap, x, y, z-1).tile_type != "stairsup":
 			print("ERROR: NON MATCHING STAIRS")
-
 		room.append([x,y,z])
 		room.append([x,y,z-1])
 		return room
-
 	else:
 		print("UNKNOWN TYPE", tile.tile_type)
-
-
-
 
 
 func load_file(filename):
@@ -752,15 +728,11 @@ func load_file(filename):
 
 
 func resend_shared_map():
-
 	for room_id in shared_rooms:
 		share_room(room_id)
 
 	# More stuff for objects needs to be added here
-
 	# share_room(sparse_map_lookup(full_sparse_map,0,0,0).rooms[0])
-
-
 	# rpc("load_room", shared_rooms)
 	# rpc("load_objects", shared_objects)
 
@@ -791,6 +763,7 @@ func _on_delete_pressed():
 func _on_host_game_pressed():
 	_on_panel_mouse_exited()
 	host_game()
+
 
 func _on_join_game_pressed():
 	_on_panel_mouse_exited()
@@ -842,13 +815,6 @@ func _on_background_close_pressed():
 	menu_open = false
 	generator_type = null
 	$menu.hide()
-
-
-# func get_closest_tile_position(position):
-# 	pass
-
-# func get_closest_vertex_position(position):
-# 	pass
 
 
 func _on_create_pressed():
@@ -1120,29 +1086,21 @@ remotesync func create_circle(id, color, size, name, floor_number, position):
 
 
 func _on_share_pressed():
-
 	# Try to get what tile the camera center is currently on
 	# Share all the rooms that tile belongs to
-
 	var x = int(floor($camera_origin.translation.x/2))
 	var y = int(floor($camera_origin.translation.z/2))
 	var z = current_floor
 
 	var tile = sparse_map_lookup(full_sparse_map,x,y,z)
 
-
 	if tile == null:
 		# print("No Tile to Share")
 		return
 
 	var rooms = tile.rooms;
-
-
 	for room in rooms:
 		share_room(room)
-
-
-	pass # Replace with function body.
 
 
 func _on_uplevel_pressed():
@@ -1154,7 +1112,6 @@ func _on_downlevel_pressed():
 
 
 func _on_unhide_pressed():
-
 	var x = int(floor($camera_origin.translation.x/2))
 	var y = int(floor($camera_origin.translation.z/2))
 	var z = current_floor
@@ -1162,6 +1119,7 @@ func _on_unhide_pressed():
 	rpc("unhide_tile_NETWORK", x, y, z)
 
 	$submenu/panel/hbox/unhide.disabled = true
+
 
 remotesync func unhide_tile_NETWORK(x,y,z):
 	var tile = sparse_map_lookup(shared_sparse_map,x,y,z)
