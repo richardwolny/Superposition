@@ -27,7 +27,9 @@ var _recent_square_size = "10"
 onready var _recent_circle_name = $NameGenerator.spell_name()
 onready var _recent_square_name = $NameGenerator.spell_name()
 onready var _recent_mini_name = $NameGenerator.mini_name()
-
+onready var _recent_circle_color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
+onready var _recent_square_color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
+onready var _recent_mini_color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
 
 func _ready():
 	$MapControls/MapMenu.get_popup().connect("id_pressed", self, "_on_MapMenu_popup_id_pressed")
@@ -93,6 +95,7 @@ func _on_CreatePopup_pressed():
 func _on_CreateCircle_pressed():
 	emit_signal("popup_toggled", true)
 	_generator_type = GeneratorType.CIRCLE
+	$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_circle_color
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_circle_name
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Size/LineEdit.text = _recent_circle_size
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Size/Label.text = "Radius:"
@@ -104,6 +107,7 @@ func _on_CreateCircle_pressed():
 func _on_CreateSquare_pressed():
 	emit_signal("popup_toggled", true)
 	_generator_type = GeneratorType.SQUARE
+	$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_square_color
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_square_name
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Size/LineEdit.text = _recent_square_size
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Size/Label.text = "Edge Length:"
@@ -115,6 +119,7 @@ func _on_CreateSquare_pressed():
 func _on_CreateMini_pressed():
 	emit_signal("popup_toggled", true)
 	_generator_type = GeneratorType.MINI
+	$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_mini_color
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_mini_name
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Size.hide()
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Model.show()
@@ -137,6 +142,7 @@ func _on_Create_pressed():
 	emit_signal("popup_toggled", false)
 	var name = $CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text
 	var color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
+	print(color)
 	if _generator_type == GeneratorType.CIRCLE:
 		var size = $CreatePopup/Center/Panel/VBox/HBox/VBox/Size/LineEdit.text
 		emit_signal("create_circle", name, color, size)
@@ -149,6 +155,15 @@ func _on_Create_pressed():
 
 	_generator_type = null
 	$CreatePopup.hide()
+
+
+func _on_ColorPicker_color_changed(color):
+	if _generator_type == GeneratorType.CIRCLE:
+		_recent_circle_color = color
+	elif _generator_type == GeneratorType.SQUARE:
+		_recent_square_color = color
+	elif _generator_type == GeneratorType.MINI:
+		_recent_mini_color = color
 
 
 func _on_Name_LineEdit_text_changed(new_text):
