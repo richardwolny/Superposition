@@ -31,11 +31,19 @@ onready var _recent_circle_color = $CreatePopup/Center/Panel/VBox/HBox/ColorPick
 onready var _recent_square_color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
 onready var _recent_mini_color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
 
+
 func _ready():
-	$MapControls/MapMenu.get_popup().connect("id_pressed", self, "_on_MapMenu_popup_id_pressed")
+	$MapControls.hide()
+	$RoomControls.hide()
 	$CreatePopup.hide()
+	$MapControls/MapMenu.get_popup().connect("id_pressed", self, "_on_MapMenu_popup_id_pressed")
 	for i in range(len(get_parent().models)):
 		$CreatePopup/Center/Panel/VBox/HBox/VBox/Model/OptionButton.add_item(get_parent().models[i][0], i)
+
+
+func show_dm_controls():
+	$MapControls.show()
+	$RoomControls.show()
 
 
 func set_share_room_disabled(disabled):

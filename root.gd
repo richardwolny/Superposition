@@ -176,6 +176,8 @@ func _on_Network_player_connected():
 
 func _on_MainMenu_start_game():
 	$MainMenu.hide()
+	if get_tree().is_network_server():
+		$GameMenu.show_dm_controls()
 	$GameMenu.show()
 
 
