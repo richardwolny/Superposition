@@ -14,7 +14,13 @@ signal up_level()
 signal down_level()
 signal popup_toggled(is_showing)
 
-var _generator_type;
+var _generator_type = null;
+var _recent_circle_size = "5"
+var _recent_square_size = "10"
+
+onready var _recent_circle_name = $NameGenerator.spell_name()
+onready var _recent_square_name = $NameGenerator.spell_name()
+onready var _recent_mini_name = $NameGenerator.mini_name()
 
 
 func _ready():
@@ -22,9 +28,6 @@ func _ready():
 	$CreatePopup.hide()
 	for i in range(len(get_parent().models)):
 		$CreatePopup/Center/Panel/VBox/HBox/VBox/Model/OptionButton.add_item(get_parent().models[i][0], i)
-	$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = $NameGenerator.spell_name()
-	$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = $NameGenerator.spell_name()
-	$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = $NameGenerator.mini_name()
 
 
 func set_share_room_disabled(disabled):
@@ -79,6 +82,8 @@ func _on_Popup_pressed():
 func _on_CreateCircle_pressed():
 	emit_signal("popup_toggled", true)
 	_generator_type = "circle"
+	$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_circle_name
+	$CreatePopup/Center/Panel/VBox/HBox/VBox/Size/LineEdit.text = _recent_circle_size
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Size/Label.text = "Radius:"
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Size.show()
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Model.hide()
@@ -88,6 +93,8 @@ func _on_CreateCircle_pressed():
 func _on_CreateSquare_pressed():
 	emit_signal("popup_toggled", true)
 	_generator_type = "square"
+	$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_square_name
+	$CreatePopup/Center/Panel/VBox/HBox/VBox/Size/LineEdit.text = _recent_square_size
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Size/Label.text = "Edge Length:"
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Size.show()
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Model.hide()
@@ -97,6 +104,7 @@ func _on_CreateSquare_pressed():
 func _on_CreateMini_pressed():
 	emit_signal("popup_toggled", true)
 	_generator_type = "mini"
+	$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_mini_name
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Size.hide()
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Model.show()
 	$CreatePopup.show()
@@ -104,11 +112,14 @@ func _on_CreateMini_pressed():
 
 func _on_GenerateRandom_pressed():
 	if _generator_type == "circle":
-		$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = $NameGenerator.spell_name()
+		_recent_circle_name = $NameGenerator.spell_name()
+		$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_circle_name
 	elif _generator_type == "square":
-		$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = $NameGenerator.spell_name()
+		_recent_square_name = $NameGenerator.spell_name()
+		$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_square_name
 	elif _generator_type == "mini":
-		$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = $NameGenerator.mini_name()
+		_recent_mini_name = $NameGenerator.mini_name()
+		$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_mini_name
 
 
 func _on_Create_pressed():
@@ -127,6 +138,22 @@ func _on_Create_pressed():
 
 	_generator_type = null
 	$CreatePopup.hide()
+
+
+func _on_Name_LineEdit_text_changed(new_text):
+	if _generator_type == "circle":
+		_recent_circle_name = new_text
+	elif _generator_type == "square":
+		_recent_square_name = new_text
+	elif _generator_type == "mini":
+		_recent_mini_name = new_text
+
+
+func _on_Size_LineEdit_text_changed(new_text):
+	if _generator_type == "circle":
+		_recent_circle_size = new_text
+	elif _generator_type == "square":
+		_recent_square_size = new_text
 
 
 func _on_Delete_pressed():

@@ -251,7 +251,9 @@ text = "Name:"
 margin_top = 18.0
 margin_right = 200.0
 margin_bottom = 42.0
-focus_mode = 0
+focus_mode = 1
+clear_button_enabled = true
+caret_blink = true
 
 [node name="GenerateRandom" type="Button" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/Name"]
 margin_top = 46.0
@@ -273,8 +275,9 @@ text = "Size:"
 margin_top = 18.0
 margin_right = 200.0
 margin_bottom = 42.0
-focus_mode = 0
+focus_mode = 1
 text = "10"
+caret_blink = true
 
 [node name="Model" type="VBoxContainer" parent="CreatePopup/Center/Panel/VBox/HBox/VBox"]
 margin_top = 208.0
@@ -321,5 +324,7 @@ script = ExtResource( 2 )
 [connection signal="pressed" from="PlayerControls/DownLevel" to="." method="_on_DownLevel_pressed"]
 [connection signal="file_selected" from="FileDialog" to="." method="_on_FileDialog_file_selected"]
 [connection signal="pressed" from="CreatePopup" to="." method="_on_Popup_pressed"]
+[connection signal="text_changed" from="CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit" to="." method="_on_Name_LineEdit_text_changed"]
 [connection signal="pressed" from="CreatePopup/Center/Panel/VBox/HBox/VBox/Name/GenerateRandom" to="." method="_on_GenerateRandom_pressed"]
+[connection signal="text_changed" from="CreatePopup/Center/Panel/VBox/HBox/VBox/Size/LineEdit" to="." method="_on_Size_LineEdit_text_changed"]
 [connection signal="pressed" from="CreatePopup/Center/Panel/VBox/Create" to="." method="_on_Create_pressed"]
