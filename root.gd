@@ -8,9 +8,9 @@ var zoom_speed = 0.5
 var pan_speed = 0.1
 const ray_length = 1000
 
-var over_menubar = false
-var menu_open = false
-var generator_type = null
+var is_popup_showing = false
+var ping_on_click_enabled = false
+var should_draw_walls = true
 
 var minis = {}
 var circles = {}
@@ -55,15 +55,11 @@ const ignored_characters = ["A", " "]
 func _ready():
 	if Network.connect('player_connected', self, '_on_Network_player_connected') != OK:
 		print("Failed to connect \"player_connected\"")
+	$GameMenu.hide()
+	$MainMenu.show()
 
-	for i in range(len(models)):
-		$menu/center/panel/style.add_item(models[i][0], i)
 
-
-func _input(event):
-	if over_menubar || menu_open:
-		return
-
+func _unhandled_input(event):
 	if event is InputEventMouseButton:
 		if event.pressed:
 			if event.button_index == BUTTON_WHEEL_UP:
@@ -86,7 +82,7 @@ func _input(event):
 						selected_object.move_to(target_tile, current_floor)
 						# print("moving object", target_tile, selected_object)
 						deselect_object()
-				elif $submenu/panel/hbox/ping.pressed:
+				elif ping_on_click_enabled:
 					rpc("ping_NETWORK", target_tile)
 				else:
 					# print("no selected objects")
@@ -143,7 +139,7 @@ func _process(delta):
 	if move_backward:
 		local_direction += Vector2(1,0)
 
-	if local_direction != Vector2(0,0)  && !menu_open:
+	if local_direction != Vector2(0,0)  && !is_popup_showing:
 		velocity = local_direction.normalized().rotated($camera_origin.rotation.y) * ($camera_origin/camera_pitch/camera.translation.z*camera_speed_mod+1) * speed * delta
 		$camera_origin.translation.x += velocity.y
 		$camera_origin.translation.z += velocity.x
@@ -157,9 +153,9 @@ func _process(delta):
 		var full_tile = sparse_map_lookup(full_sparse_map,x,y,z)
 
 		if shared_tile != null && shared_tile.hidden:
-			$DmControls.set_unhide_tile_disabled(false)
+			$GameMenu.set_unhide_tile_disabled(false)
 		else:
-			$DmControls.set_unhide_tile_disabled(true)
+			$GameMenu.set_unhide_tile_disabled(true)
 
 		var should_disable_share_button = true
 
@@ -168,7 +164,7 @@ func _process(delta):
 				if !shared_rooms.has(room):
 					should_disable_share_button = false
 
-		$DmControls.set_share_room_disabled(should_disable_share_button)
+		$GameMenu.set_share_room_disabled(should_disable_share_button)
 
 
 func _on_Network_player_connected():
@@ -180,17 +176,15 @@ func _on_Network_player_connected():
 
 func _on_MainMenu_start_game():
 	$MainMenu.hide()
-	$submenu.show()
-	if get_tree().is_network_server():
-		$DmControls.show()
+	$GameMenu.show()
 
 
-func _on_DmControls_map_changed(filename):
+func _on_GameMenu_map_changed(filename):
 	print("_on_MapControls_map_changed: " + filename)
 	load_room_from_file(filename)
 
 
-func _on_DmControls_share_room():
+func _on_GameMenu_share_room():
 		# Try to get what tile the camera center is currently on
 	# Share all the rooms that tile belongs to
 	var x = int(floor($camera_origin.translation.x/2))
@@ -208,13 +202,121 @@ func _on_DmControls_share_room():
 		share_room(room)
 
 
-func _on_DmControls_unhide_tile():
+func _on_GameMenu_unhide_tile():
 	var x = int(floor($camera_origin.translation.x/2))
 	var y = int(floor($camera_origin.translation.z/2))
 	var z = current_floor
 
 	rpc("unhide_tile_NETWORK", x, y, z)
-	$DmControls.set_unhide_tile_disabled(true)
+	$GameMenu.set_unhide_tile_disabled(true)
+
+
+func _on_GameMenu_create_circle(name, color, radius):
+	var id = str(get_tree().get_network_unique_id()) + "_" + str(randi())
+	var raw_size = float(radius) * 2
+	var tile_size = int(ceil(raw_size / 5))
+
+	# print($camera_origin.translation)
+	var snapped_centerpoint = Vector3(
+		floor($camera_origin.translation.x / 2) * 2 + 1,
+		0,
+		floor($camera_origin.translation.z / 2) * 2 + 1
+	)
+	# print(snapped_centerpoint)
+	if tile_size % 2 == 0:
+		snapped_centerpoint = Vector3(
+			floor(($camera_origin.translation.x + 1) / 2) * 2,
+			0,
+			floor(($camera_origin.translation.z + 1) / 2) * 2
+		)
+	# print( tile_size, snapped_centerpoint)
+
+	rpc("create_circle",
+		id,
+		color,
+		tile_size,
+		name,
+		current_floor,
+		snapped_centerpoint
+	)
+
+
+func _on_GameMenu_create_square(name, color, edge_length):
+	var id = str(get_tree().get_network_unique_id()) + "_" + str(randi())
+	var raw_size = int(edge_length)
+	var tile_size = int(ceil(raw_size / 5))
+
+	# print($camera_origin.translation)
+	var snapped_centerpoint = Vector3(
+		floor($camera_origin.translation.x / 2) * 2 + 1,
+		0,
+		floor($camera_origin.translation.z / 2) * 2 + 1
+	)
+	# print(snapped_centerpoint)
+	if tile_size % 2 == 0:
+		snapped_centerpoint = Vector3(
+			floor(($camera_origin.translation.x + 1) / 2) * 2,
+			0,
+			floor(($camera_origin.translation.z + 1) / 2) * 2
+		)
+	# print( tile_size, snapped_centerpoint)
+
+	rpc("create_square",
+		id,
+		color,
+		tile_size,
+		name,
+		current_floor,
+		snapped_centerpoint
+	)
+
+
+func _on_GameMenu_create_mini(name, color, model_index):
+	var id = str(get_tree().get_network_unique_id()) + "_" + str(randi())
+
+	var position = Vector3(
+		floor($camera_origin.translation.x / 2) * 2 + 1,
+		0,
+		floor($camera_origin.translation.z / 2) * 2 + 1
+	)
+
+	if !get_tree().is_network_server():
+		position = Vector3(1, 0, 1)
+
+	rpc("create_mini",
+		id,
+		color,
+		model_index,
+		name,
+		current_floor,
+		position
+	)
+
+
+func _on_GameMenu_delete():
+	selected_object.delete()
+	redraw_gridmap_tiles()
+
+
+func _on_GameMenu_toggle_ping(is_enabled):
+	ping_on_click_enabled = is_enabled
+
+
+func _on_GameMenu_toggle_walls(show_walls):
+	should_draw_walls = show_walls
+	redraw_gridmap_tiles()
+
+
+func _on_GameMenu_up_level():
+	go_upstairs()
+
+
+func _on_GameMenu_down_level():
+	go_downstairs()
+
+
+func _on_GameMenu_popup_toggled(is_showing):
+	is_popup_showing = is_showing
 
 
 func get_targeted_tile(event, layer=0):
@@ -253,7 +355,7 @@ func deselect_object():
 	# surface_material.next_pass.set_shader_param("enable", false)
 
 	selected_object = null
-	$submenu/panel/hbox/delete.disabled = true
+	$GameMenu.set_object_selected(false)
 
 
 func select_object(object):
@@ -264,7 +366,7 @@ func select_object(object):
 	# surface_material.next_pass.set_shader_param("enable", true)
 
 	selected_object = object
-	$submenu/panel/hbox/delete.disabled = false
+	$GameMenu.set_object_selected(true)
 
 
 remotesync func ping_NETWORK(position):
@@ -309,7 +411,7 @@ func go_upstairs():
 	current_floor += 1
 	redraw_gridmap_tiles()
 	hide_show_floor_objects()
-	$submenu/panel/hbox/floor.text = "Floor " + str(current_floor+1)
+	$GameMenu.set_current_floor(current_floor + 1)
 
 
 func go_downstairs():
@@ -319,8 +421,7 @@ func go_downstairs():
 	current_floor -= 1
 	redraw_gridmap_tiles()
 	hide_show_floor_objects()
-	$submenu/panel/hbox/floor.text = "Floor " + str(current_floor+1)
-
+	$GameMenu.set_current_floor(current_floor + 1)
 
 # This is slightly wrong right now but that is ok I will fix it later
 func redraw_gridmap_tiles():
@@ -356,7 +457,7 @@ func redraw_gridmap_tiles():
 				var tile = sparse_map_lookup(visible_tiles, x, y, z)
 
 				if tile.hidden || tile.tile_type == "wall":
-					if $submenu/panel/hbox/walls.pressed:
+					if should_draw_walls:
 						# up,down,left,right
 						var up_tile = sparse_map_lookup(visible_tiles, x, y+1, z)
 						var down_tile = sparse_map_lookup(visible_tiles, x, y-1, z)
@@ -751,155 +852,6 @@ remotesync func load_room(room_objects):
 		$gridmap.set_cell_item (grid_object[0], grid_object[1], grid_object[2], grid_object[3], tile_rotations[grid_object[4]])
 
 
-func _on_panel_mouse_entered():
-	over_menubar = true
-	pass # Replace with function body.
-
-
-func _on_panel_mouse_exited():
-	over_menubar = false
-	for node in $submenu/panel/hbox.get_children():
-		node.release_focus()
-	# print("releasing focus from everything")
-
-
-func _on_delete_pressed():
-	selected_object.delete()
-	redraw_gridmap_tiles()
-
-
-func _on_make_object_pressed():
-	menu_open = true
-	generator_type = "mini"
-	$menu/center/panel/name.text = $name_generator.mini_name()
-
-	$menu/center/panel/size.hide()
-	$menu/center/panel/style.show()
-
-	$menu.show()
-
-
-func _on_square_pressed():
-	menu_open = true
-	generator_type = "square"
-	$menu/center/panel/name.text = $name_generator.spell_name()
-
-	$menu/center/panel/size.show()
-	$menu/center/panel/size.text = "10"
-	$menu/center/panel/size/edgelength.show()
-	$menu/center/panel/size/radius.hide()
-
-	$menu/center/panel/style.hide()
-
-	$menu.show()
-
-
-func _on_circle_pressed():
-	menu_open = true
-	generator_type = "circle"
-	$menu/center/panel/name.text = $name_generator.spell_name()
-
-	$menu/center/panel/size.show()
-	$menu/center/panel/size.text = "5"
-	$menu/center/panel/size/edgelength.hide()
-	$menu/center/panel/size/radius.show()
-
-	$menu/center/panel/style.hide()
-
-	$menu.show()
-
-
-func _on_background_close_pressed():
-	menu_open = false
-	generator_type = null
-	$menu.hide()
-
-
-func _on_create_pressed():
-	var id = str(get_tree().get_network_unique_id()) + "_" + str(randi())
-
-	if generator_type == "mini":
-		var style = $menu/center/panel/style.get_selected_id()
-
-		var position = Vector3(
-			floor($camera_origin.translation.x/2)*2+1,
-			0,
-			floor($camera_origin.translation.z/2)*2+1
-		)
-
-		if !get_tree().is_network_server():
-			position = Vector3(1,0,1)
-
-		rpc("create_mini",
-			id,
-			$menu/center/panel/color.color,
-			style,
-			$menu/center/panel/name.text,
-			current_floor,
-			position
-		)
-
-	if generator_type == "square":
-		var raw_size = int($menu/center/panel/size.text)
-		var tile_size = int(ceil(raw_size/5))
-
-		# print($camera_origin.translation)
-		var snapped_centerpoint = Vector3(
-			floor($camera_origin.translation.x/2)*2+1,
-			0,
-			floor($camera_origin.translation.z/2)*2+1
-		)
-		# print(snapped_centerpoint)
-		if tile_size%2 == 0:
-			snapped_centerpoint = Vector3(
-				floor(($camera_origin.translation.x+1)/2)*2,
-				0,
-				floor(($camera_origin.translation.z+1)/2)*2
-			)
-		# print( tile_size, snapped_centerpoint)
-
-		rpc("create_square",
-			id,
-			$menu/center/panel/color.color,
-			tile_size,
-			$menu/center/panel/name.text,
-			current_floor,
-			snapped_centerpoint
-			)
-
-	if generator_type == "circle":
-		var raw_size = float($menu/center/panel/size.text)*2
-		var tile_size = int(ceil(raw_size/5))
-
-		# print($camera_origin.translation)
-		var snapped_centerpoint = Vector3(
-			floor($camera_origin.translation.x/2)*2+1,
-			0,
-			floor($camera_origin.translation.z/2)*2+1
-		)
-		# print(snapped_centerpoint)
-		if tile_size%2 == 0:
-			snapped_centerpoint = Vector3(
-				floor(($camera_origin.translation.x+1)/2)*2,
-				0,
-				floor(($camera_origin.translation.z+1)/2)*2
-			)
-		# print( tile_size, snapped_centerpoint)
-
-		rpc("create_circle",
-			id,
-			$menu/center/panel/color.color,
-			tile_size,
-			$menu/center/panel/name.text,
-			current_floor,
-			snapped_centerpoint
-			)
-
-	menu_open = false
-	generator_type = null
-	$menu.hide()
-
-
 func resend_objects():
 	for mini_id in minis:
 		var mini = minis[mini_id]
@@ -1083,19 +1035,7 @@ remotesync func create_circle(id, color, size, name, floor_number, position):
 	}
 
 
-func _on_uplevel_pressed():
-	go_upstairs()
-
-
-func _on_downlevel_pressed():
-	go_downstairs()
-
-
 remotesync func unhide_tile_NETWORK(x,y,z):
 	var tile = sparse_map_lookup(shared_sparse_map,x,y,z)
 	tile.hidden = false
-	redraw_gridmap_tiles()
-
-
-func _on_walls_toggled(button_pressed):
 	redraw_gridmap_tiles()

@@ -1,0 +1,325 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://game_menu.gd" type="Script" id=1]
+[ext_resource path="res://name_generator.gd" type="Script" id=2]
+
+[node name="GameMenu" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="MapControls" type="HBoxContainer" parent="."]
+margin_right = 40.0
+margin_bottom = 40.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="MapMenu" type="MenuButton" parent="MapControls"]
+margin_right = 82.0
+margin_bottom = 40.0
+text = "Select Map"
+flat = false
+items = [ "res://map_test.txt", null, 0, false, false, 0, 0, null, "", false, "res://map_mines.txt", null, 0, false, false, 1, 0, null, "", false, "res://map_plane.txt", null, 0, false, false, 2, 0, null, "", false ]
+
+[node name="LoadMap" type="Button" parent="MapControls"]
+margin_left = 86.0
+margin_right = 159.0
+margin_bottom = 40.0
+focus_mode = 0
+enabled_focus_mode = 0
+text = "Load Map"
+
+[node name="CurrentMap" type="Label" parent="MapControls"]
+margin_left = 163.0
+margin_top = 13.0
+margin_right = 245.0
+margin_bottom = 27.0
+text = "Current Map:"
+
+[node name="RoomControls" type="HBoxContainer" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+margin_left = -177.0
+margin_bottom = 40.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ShareRoom" type="Button" parent="RoomControls"]
+margin_right = 88.0
+margin_bottom = 40.0
+focus_mode = 0
+enabled_focus_mode = 0
+text = "Share Room"
+
+[node name="UnhideTile" type="Button" parent="RoomControls"]
+margin_left = 92.0
+margin_right = 177.0
+margin_bottom = 40.0
+focus_mode = 0
+enabled_focus_mode = 0
+text = "Unhide Tile"
+
+[node name="PlayerControls" type="HBoxContainer" parent="."]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = -40.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CreateCircle" type="Button" parent="PlayerControls"]
+margin_right = 110.0
+margin_bottom = 40.0
+focus_mode = 0
+size_flags_horizontal = 3
+enabled_focus_mode = 0
+text = "Add Circle"
+
+[node name="CreateSquare" type="Button" parent="PlayerControls"]
+margin_left = 114.0
+margin_right = 224.0
+margin_bottom = 40.0
+focus_mode = 0
+size_flags_horizontal = 3
+enabled_focus_mode = 0
+text = "Add Square"
+
+[node name="CreateMini" type="Button" parent="PlayerControls"]
+margin_left = 228.0
+margin_right = 338.0
+margin_bottom = 40.0
+focus_mode = 0
+size_flags_horizontal = 3
+enabled_focus_mode = 0
+text = "Add Mini"
+
+[node name="Delete" type="Button" parent="PlayerControls"]
+margin_left = 342.0
+margin_right = 452.0
+margin_bottom = 40.0
+focus_mode = 0
+size_flags_horizontal = 3
+disabled = true
+enabled_focus_mode = 0
+text = "Delete"
+
+[node name="Ping" type="Button" parent="PlayerControls"]
+margin_left = 456.0
+margin_right = 567.0
+margin_bottom = 40.0
+focus_mode = 0
+size_flags_horizontal = 3
+toggle_mode = true
+enabled_focus_mode = 0
+text = "Ping"
+
+[node name="Walls" type="Button" parent="PlayerControls"]
+margin_left = 571.0
+margin_right = 681.0
+margin_bottom = 40.0
+focus_mode = 0
+size_flags_horizontal = 3
+toggle_mode = true
+pressed = true
+enabled_focus_mode = 0
+text = "Walls"
+
+[node name="UpLevel" type="Button" parent="PlayerControls"]
+margin_left = 685.0
+margin_right = 795.0
+margin_bottom = 40.0
+focus_mode = 0
+size_flags_horizontal = 3
+enabled_focus_mode = 0
+text = "Upstairs"
+
+[node name="DownLevel" type="Button" parent="PlayerControls"]
+margin_left = 799.0
+margin_right = 909.0
+margin_bottom = 40.0
+focus_mode = 0
+size_flags_horizontal = 3
+enabled_focus_mode = 0
+text = "Downstairs"
+
+[node name="Floor" type="Label" parent="PlayerControls"]
+margin_left = 913.0
+margin_top = 13.0
+margin_right = 1024.0
+margin_bottom = 27.0
+size_flags_horizontal = 3
+text = "Floor: 1"
+
+[node name="FileDialog" type="FileDialog" parent="."]
+margin_right = 400.0
+margin_bottom = 300.0
+rect_min_size = Vector2( 400, 300 )
+window_title = "Open a File"
+resizable = true
+mode = 0
+access = 2
+filters = PoolStringArray( "*.txt; Map Files" )
+current_dir = "/Users/Richard/Documents/Godot/Superposition"
+current_path = "/Users/Richard/Documents/Godot/Superposition/"
+
+[node name="CreatePopup" type="Button" parent="."]
+self_modulate = Color( 1, 1, 1, 0.466667 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+focus_mode = 0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+enabled_focus_mode = 0
+flat = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="DimBackground" type="ColorRect" parent="CreatePopup"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+color = Color( 0, 0, 0, 0.243137 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Center" type="CenterContainer" parent="CreatePopup"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Panel" type="PanelContainer" parent="CreatePopup/Center"]
+margin_left = 249.0
+margin_top = 53.0
+margin_right = 775.0
+margin_bottom = 547.0
+
+[node name="VBox" type="VBoxContainer" parent="CreatePopup/Center/Panel"]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 519.0
+margin_bottom = 487.0
+mouse_filter = 0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBox" type="HBoxContainer" parent="CreatePopup/Center/Panel/VBox"]
+margin_right = 512.0
+margin_bottom = 436.0
+size_flags_vertical = 3
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorPicker" type="ColorPicker" parent="CreatePopup/Center/Panel/VBox/HBox"]
+margin_right = 308.0
+margin_bottom = 436.0
+size_flags_vertical = 0
+color = Color( 0.462745, 0.466667, 0.552941, 1 )
+presets_enabled = false
+presets_visible = false
+
+[node name="VBox" type="VBoxContainer" parent="CreatePopup/Center/Panel/VBox/HBox"]
+margin_left = 312.0
+margin_right = 512.0
+margin_bottom = 436.0
+rect_min_size = Vector2( 200, 0 )
+custom_constants/separation = 50
+
+[node name="Name" type="VBoxContainer" parent="CreatePopup/Center/Panel/VBox/HBox/VBox"]
+margin_right = 200.0
+margin_bottom = 66.0
+
+[node name="Label" type="Label" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/Name"]
+margin_right = 200.0
+margin_bottom = 14.0
+text = "Name:"
+
+[node name="LineEdit" type="LineEdit" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/Name"]
+margin_top = 18.0
+margin_right = 200.0
+margin_bottom = 42.0
+focus_mode = 0
+
+[node name="GenerateRandom" type="Button" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/Name"]
+margin_top = 46.0
+margin_right = 200.0
+margin_bottom = 66.0
+text = "Generate Random"
+
+[node name="Size" type="VBoxContainer" parent="CreatePopup/Center/Panel/VBox/HBox/VBox"]
+margin_top = 116.0
+margin_right = 200.0
+margin_bottom = 158.0
+
+[node name="Label" type="Label" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/Size"]
+margin_right = 200.0
+margin_bottom = 14.0
+text = "Size:"
+
+[node name="LineEdit" type="LineEdit" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/Size"]
+margin_top = 18.0
+margin_right = 200.0
+margin_bottom = 42.0
+focus_mode = 0
+text = "10"
+
+[node name="Model" type="VBoxContainer" parent="CreatePopup/Center/Panel/VBox/HBox/VBox"]
+margin_top = 208.0
+margin_right = 200.0
+margin_bottom = 246.0
+
+[node name="Label" type="Label" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/Model"]
+margin_right = 200.0
+margin_bottom = 14.0
+text = "Model:"
+
+[node name="OptionButton" type="OptionButton" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/Model"]
+margin_top = 18.0
+margin_right = 200.0
+margin_bottom = 38.0
+focus_mode = 0
+enabled_focus_mode = 0
+
+[node name="Create" type="Button" parent="CreatePopup/Center/Panel/VBox"]
+margin_top = 440.0
+margin_right = 512.0
+margin_bottom = 480.0
+rect_min_size = Vector2( 0, 40 )
+focus_mode = 0
+enabled_focus_mode = 0
+text = "Create"
+
+[node name="NameGenerator" type="Node" parent="."]
+script = ExtResource( 2 )
+[connection signal="pressed" from="MapControls/LoadMap" to="." method="_on_LoadMap_pressed"]
+[connection signal="pressed" from="RoomControls/ShareRoom" to="." method="_on_Share_pressed"]
+[connection signal="pressed" from="RoomControls/ShareRoom" to="." method="_on_ShareRoom_pressed"]
+[connection signal="pressed" from="RoomControls/UnhideTile" to="." method="_on_Unhide_pressed"]
+[connection signal="pressed" from="RoomControls/UnhideTile" to="." method="_on_UnhideTile_pressed"]
+[connection signal="pressed" from="PlayerControls/CreateCircle" to="." method="_on_CreateCircle_pressed"]
+[connection signal="pressed" from="PlayerControls/CreateSquare" to="." method="_on_CreateSquare_pressed"]
+[connection signal="pressed" from="PlayerControls/CreateMini" to="." method="_on_CreateMini_pressed"]
+[connection signal="pressed" from="PlayerControls/Delete" to="." method="_on_Delete_pressed"]
+[connection signal="pressed" from="PlayerControls/Ping" to="." method="_on_Ping_pressed"]
+[connection signal="toggled" from="PlayerControls/Ping" to="." method="_on_Ping_toggled"]
+[connection signal="pressed" from="PlayerControls/Walls" to="." method="_on_Walls_pressed"]
+[connection signal="toggled" from="PlayerControls/Walls" to="." method="_on_Walls_toggled"]
+[connection signal="pressed" from="PlayerControls/UpLevel" to="." method="_on_UpLevel_pressed"]
+[connection signal="pressed" from="PlayerControls/DownLevel" to="." method="_on_DownLevel_pressed"]
+[connection signal="file_selected" from="FileDialog" to="." method="_on_FileDialog_file_selected"]
+[connection signal="pressed" from="CreatePopup" to="." method="_on_Popup_pressed"]
+[connection signal="pressed" from="CreatePopup/Center/Panel/VBox/HBox/VBox/Name/GenerateRandom" to="." method="_on_GenerateRandom_pressed"]
+[connection signal="pressed" from="CreatePopup/Center/Panel/VBox/Create" to="." method="_on_Create_pressed"]
