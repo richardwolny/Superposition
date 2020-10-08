@@ -65,6 +65,11 @@ func _on_FileDialog_file_selected(path):
 	emit_signal("map_changed", path)
 
 
+func _on_FileDialog_popup_hide():
+	print("_on_FileDialog_popup_hide")
+	emit_signal("popup_toggled", false)
+
+
 func _on_ShareRoom_pressed():
 	emit_signal("share_room")
 
@@ -73,7 +78,7 @@ func _on_UnhideTile_pressed():
 	emit_signal("unhide_tile")
 
 
-func _on_Popup_pressed():
+func _on_CreatePopup_pressed():
 	emit_signal("popup_toggled", false)
 	_generator_type = null
 	$CreatePopup.hide()
