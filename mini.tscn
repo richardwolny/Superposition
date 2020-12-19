@@ -10,7 +10,7 @@ data = PoolVector3Array( 0.5393, 2, 0.5393, -0.5393, 2, -0.5393, 0.5393, 2, -0.5
 [sub_resource type="ViewportTexture" id=2]
 viewport_path = NodePath("name/viewport")
 
-[node name="hero" type="StaticBody"]
+[node name="Mini" type="StaticBody"]
 script = ExtResource( 4 )
 
 [node name="mesh" type="MeshInstance" parent="."]

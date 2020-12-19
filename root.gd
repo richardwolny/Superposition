@@ -894,7 +894,7 @@ remotesync func create_mini(id, color, style, name, floor_number, position):
 		print("WARNING: mini id already exists!")
 		return
 
-	var mini = load("res://hero.tscn").instance()
+	var mini = load("res://mini.tscn").instance()
 	mini.name = id
 
 	 # tile size
@@ -909,12 +909,12 @@ remotesync func create_mini(id, color, style, name, floor_number, position):
 	var label = mini.get_node("name/viewport/name/center/label")
 	label.text = name
 
-	var hero_material = load("res://heromaterial.tres").duplicate()
-	var hero_material_glow = load("res://heromaterial_glow.tres").duplicate()
-	hero_material.set_shader_param("albedo", color)
-	hero_material.next_pass = hero_material_glow
+	var mini_material = load("res://mini_material.tres").duplicate()
+	var mini_material_glow = load("res://mini_material_glow.tres").duplicate()
+	mini_material.set_shader_param("albedo", color)
+	mini_material.next_pass = mini_material_glow
 
-	mini.get_node("mesh").set_surface_material(0, hero_material)
+	mini.get_node("mesh").set_surface_material(0, mini_material)
 
 	self.add_child(mini)
 
