@@ -10,7 +10,10 @@ const ray_length = 1000
 
 var is_popup_showing = false
 var ping_on_click_enabled = false
+var measure_on_click_enabled = false
 var should_draw_walls = true
+
+var material = SpatialMaterial.new()
 
 var minis = {}
 var circles = {}
@@ -25,6 +28,7 @@ var models = [
 ]
 
 var selected_object = null
+var rotate_mode_enabled = false;
 
 const speed = 10
 var velocity = Vector2()
@@ -57,9 +61,17 @@ func _ready():
 		print("Failed to connect \"player_connected\"")
 	$GameMenu.hide()
 	$MainMenu.show()
+	material.flags_unshaded = true
+	material.flags_use_point_size = true
+	material.albedo_color = Color.red
 
 
 func _unhandled_input(event):
+	if event is InputEventKey:
+		if event.pressed and not event.echo:
+			if event.scancode == KEY_R:
+				if selected_object != null:
+					toggle_rotate_mode()
 	if event is InputEventMouseButton:
 		if event.pressed:
 			if event.button_index == BUTTON_WHEEL_UP:
@@ -73,17 +85,20 @@ func _unhandled_input(event):
 				# print("Mouse Click at:", event.position)
 				Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 			elif event.button_index == BUTTON_LEFT:
-				var target_tile = get_targeted_tile(event)
+				var floor_target = get_mouse_floor_intersection(event.position)
 
-				# If an object is selected then move it to the location
 				if selected_object != null:
-					# print("found a selected object")
-					if target_tile != null:
-						selected_object.move_to(target_tile, current_floor)
-						# print("moving object", target_tile, selected_object)
-						deselect_object()
+					if rotate_mode_enabled:
+						if floor_target != null:
+							selected_object.rotate_to(floor_target)
+							deselect_object()
+							exit_rotate_mode()
+					else:
+						if floor_target != null:
+							selected_object.move_to(floor_target, current_floor)
+							deselect_object()
 				elif ping_on_click_enabled:
-					rpc("ping_NETWORK", target_tile)
+					rpc("ping_NETWORK", floor_target)
 				else:
 					# print("no selected objects")
 					var camera = $camera_origin/camera_pitch/camera
@@ -165,6 +180,34 @@ func _process(delta):
 					should_disable_share_button = false
 
 		$GameMenu.set_share_room_disabled(should_disable_share_button)
+		
+	if rotate_mode_enabled:
+		var intersection_point = get_mouse_floor_intersection(get_viewport().get_mouse_position())
+		if intersection_point != null:
+			
+			var selected_position = selected_object.global_transform.origin
+			var selected_direction = selected_object.global_transform.basis.z
+			var target_direction = intersection_point - selected_position
+			var angle_to_target = selected_direction.angle_to(target_direction)
+#			print("angle", angle_to_target)
+			
+			var draw_node = get_node("Draw")
+			draw_node.set_material_override(material)
+			draw_node.clear()
+			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
+			draw_node.add_vertex(intersection_point)
+			draw_node.add_vertex(intersection_point + Vector3(0,1,0))
+
+			selected_position.y = 0.1
+			intersection_point.y = 0.1
+
+			draw_node.add_vertex(selected_position)
+			draw_node.add_vertex(intersection_point)
+			
+			draw_node.add_vertex(selected_position)
+			draw_node.add_vertex(selected_position + selected_direction * 2)
+			
+			draw_node.end()
 
 
 func _on_Network_player_connected():
@@ -321,28 +364,22 @@ func _on_GameMenu_popup_toggled(is_showing):
 	is_popup_showing = is_showing
 
 
-func get_targeted_tile(event, layer=0):
+func get_mouse_floor_intersection(screen_position, height = 0):
 	var camera = $camera_origin/camera_pitch/camera
-	var start_coordinate = camera.project_ray_origin(event.position)
-	var direction = camera.project_ray_normal(event.position)
-	# var end_coordinate = start_coordinate + camera.project_ray_normal(event.position) * ray_length
-	# var space_state = get_world().direct_space_state
-	# var result = space_state.intersect_ray(start_coordinate, end_coordinate)
-
+	var start_coordinate = camera.project_ray_origin(screen_position)
+	var direction = camera.project_ray_normal(screen_position)
 	var x1 = float(start_coordinate.x)
 	var y1 = float(start_coordinate.y)
 	var z1 = float(start_coordinate.z)
 	var x2 = float(direction.x)
 	var y2 = float(direction.y)
 	var z2 = float(direction.z)
-
 	if (x2 != 0 && y2 != 0 && z2 != 0):
-		var x_slope = y2/x2
-		var z_slope = y2/z2
-		var x_at_zero = layer-(y1-x_slope*x1) / x_slope
-		var z_at_zero = layer-(y1-z_slope*z1) / z_slope
-
-		return Vector3(x_at_zero, layer, z_at_zero)
+		var x_slope = y2 / x2
+		var z_slope = y2 / z2
+		var x_at_zero = height - (y1 - x_slope * x1) / x_slope
+		var z_at_zero = height - (y1 - z_slope * z1) / z_slope
+		return Vector3(x_at_zero, height, z_at_zero)
 	else:
 		print("Caught a div by zero in tile lookup")
 
@@ -369,6 +406,27 @@ func select_object(object):
 
 	selected_object = object
 	$GameMenu.set_object_selected(true)
+
+
+func toggle_rotate_mode():
+	if rotate_mode_enabled:
+		exit_rotate_mode()
+	else:
+		enter_rotate_mode()
+
+
+func enter_rotate_mode():
+	print("enter_rotate_mode")
+	rotate_mode_enabled = true
+
+
+func exit_rotate_mode():
+	print("exit_rotate_mode")
+	rotate_mode_enabled = false
+	var draw_node = get_node("Draw")
+	draw_node.set_material_override(material)
+	draw_node.clear()
+	draw_node.end()
 
 
 remotesync func ping_NETWORK(position):
