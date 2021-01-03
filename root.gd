@@ -483,9 +483,6 @@ remotesync func share_room_NETWORK(room_index, tiles):
 
 
 func go_upstairs():
-	if selected_object != null:
-		deselect_object()
-
 	current_floor += 1
 	redraw_gridmap_tiles()
 	hide_show_floor_objects()
@@ -493,13 +490,11 @@ func go_upstairs():
 
 
 func go_downstairs():
-	if selected_object != null:
-		deselect_object()
-
 	current_floor -= 1
 	redraw_gridmap_tiles()
 	hide_show_floor_objects()
 	$GameMenu.set_current_floor(current_floor + 1)
+
 
 # This is slightly wrong right now but that is ok I will fix it later
 func redraw_gridmap_tiles():

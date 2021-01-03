@@ -23,6 +23,7 @@ func _process(delta):
 			self.transform.origin.x = _target_position.x
 			self.transform.origin.z = _target_position.y
 			_position_animation = false
+			end_move_floor_change()
 			hide_show_on_floor()
 		else:
 			var movement = distance.normalized() * movement_speed
@@ -59,6 +60,10 @@ func set_object_deselected():
 	var surface_material = self.get_node("mesh").get_surface_material(0)
 	surface_material.set_shader_param("enable", false)
 	surface_material.next_pass.set_shader_param("enable", false)
+
+
+func end_move_floor_change():
+	pass
 
 
 func hide_show_on_floor():
