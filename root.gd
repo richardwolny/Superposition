@@ -1,19 +1,36 @@
 extends Spatial
 
 
-var pressed = false
-var mouse_speed = 0.003
-var camera_speed_mod = .1
-var zoom_speed = 0.5
-var pan_speed = 0.1
+enum LeftClickAction {
+	SELECT,
+	MOVE_SELECTED,
+	ROTATE_SELECTED,
+	PING,
+}
+
+const mouse_speed = 0.003
+const camera_speed_mod = .1
+const zoom_speed = 0.5
 const ray_length = 1000
+const speed = 10
+const tile_types = {
+	"floor": 0,
+	"door": 1,
+	"hiddendoor": 1,
+	"stairsup": 7,
+	"stairsdown": 6,
+	"start": 8,
+}
+const ignored_characters = ["A", " "]
+
+var left_click_action = LeftClickAction.SELECT
+var right_mouse_button_pressed = false
+
+var selected_object = null
+var draw_material = SpatialMaterial.new()
 
 var is_popup_showing = false
-var ping_on_click_enabled = false
-var measure_on_click_enabled = false
 var should_draw_walls = true
-
-var material = SpatialMaterial.new()
 
 var minis = {}
 var circles = {}
@@ -27,14 +44,7 @@ var models = [
 	["Avallach", 1, 2.6, "avallach.tres"],
 ]
 
-var selected_object = null
-var rotate_mode_enabled = false;
-
-const speed = 10
-var velocity = Vector2()
-
 var tile_rotations = [0, 10, 16, 22]
-
 var current_floor = 0
 
 var shared_sparse_map = {}
@@ -44,34 +54,24 @@ var rooms = []
 # A client side sparse list of rooms
 var shared_rooms = {}
 
-const tile_types = {
-	"floor": 0,
-	"door": 1,
-	"hiddendoor": 1,
-	"stairsup": 7,
-	"stairsdown": 6,
-	"start": 8,
-}
-
-const ignored_characters = ["A", " "]
-
 
 func _ready():
 	if Network.connect('player_connected', self, '_on_Network_player_connected') != OK:
 		print("Failed to connect \"player_connected\"")
 	$GameMenu.hide()
 	$MainMenu.show()
-	material.flags_unshaded = true
-	material.flags_use_point_size = true
-	material.albedo_color = Color.red
+	draw_material.flags_unshaded = true
+	draw_material.flags_use_point_size = true
+	draw_material.albedo_color = Color.red
 
 
 func _unhandled_input(event):
 	if event is InputEventKey:
 		if event.pressed and not event.echo:
+			if event.scancode == KEY_ESCAPE:
+				change_left_click_action(LeftClickAction.SELECT)
 			if event.scancode == KEY_R:
-				if selected_object != null:
-					toggle_rotate_mode()
+				toggle_rotate_mode()
 	if event is InputEventMouseButton:
 		if event.pressed:
 			if event.button_index == BUTTON_WHEEL_UP:
@@ -81,45 +81,46 @@ func _unhandled_input(event):
 			elif event.button_index == BUTTON_WHEEL_DOWN:
 				$camera_origin/camera_pitch/camera.translation.z += zoom_speed
 			elif event.button_index == BUTTON_RIGHT:
-				pressed = true
-				# print("Mouse Click at:", event.position)
+				right_mouse_button_pressed = true
 				Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 			elif event.button_index == BUTTON_LEFT:
 				var floor_target = get_mouse_floor_intersection(event.position)
-
-				if selected_object != null:
-					if rotate_mode_enabled:
-						if floor_target != null:
-							selected_object.rotate_to(floor_target)
-							deselect_object()
-							exit_rotate_mode()
-					else:
+				match left_click_action:
+					LeftClickAction.SELECT:
+						print("executing LeftClickAction.SELECT")
+						var camera = $camera_origin/camera_pitch/camera
+						var start_coordinate = camera.project_ray_origin(event.position)
+						var end_coordinate = start_coordinate + camera.project_ray_normal(event.position) * ray_length
+						var space_state = get_world().direct_space_state
+						var result = space_state.intersect_ray(start_coordinate, end_coordinate)
+						if result:
+							if result.collider.has_method("set_object_selected"):
+								select_object(result.collider)
+								change_left_click_action(LeftClickAction.MOVE_SELECTED)
+					LeftClickAction.MOVE_SELECTED:
+						print("executing LeftClickAction.MOVE_SELECTED")
+						assert(selected_object != null)
 						if floor_target != null:
 							selected_object.move_to(floor_target, current_floor)
-							deselect_object()
-				elif ping_on_click_enabled:
-					rpc("ping_NETWORK", floor_target)
-				else:
-					# print("no selected objects")
-					var camera = $camera_origin/camera_pitch/camera
-					var start_coordinate = camera.project_ray_origin(event.position)
-					var end_coordinate = start_coordinate + camera.project_ray_normal(event.position) * ray_length
-					var space_state = get_world().direct_space_state
-					var result = space_state.intersect_ray(start_coordinate, end_coordinate)
-					if result:
-						# print("Hit", result.collider)
-						if result.collider.has_method("set_object_selected"):
-							select_object(result.collider)
-						else:
-							pass
-							# print("Hit not found")
+							change_left_click_action(LeftClickAction.SELECT)
+					LeftClickAction.ROTATE_SELECTED:
+						print("executing LeftClickAction.ROTATE_SELECTED")
+						assert(selected_object != null)
+						if floor_target != null:
+							selected_object.rotate_to(floor_target)
+							change_left_click_action(LeftClickAction.SELECT)
+					LeftClickAction.PING:
+						print("executing LeftClickAction.PING")
+						rpc("ping_NETWORK", floor_target)
+					_:
+						print("executing invalid LeftClickAction")
+						assert(true)
 		else:
 			if event.button_index == BUTTON_RIGHT:
-				pressed = false
-				# print("Mouse Unclick at:", event.position)
+				right_mouse_button_pressed = false
 				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	elif event is InputEventMouseMotion:
-		if pressed:
+		if right_mouse_button_pressed:
 			# Horizontal Movement
 			$camera_origin.rotate(Vector3(0,1,0), -event.relative.x * mouse_speed)
 
@@ -130,8 +131,6 @@ func _unhandled_input(event):
 			if $camera_origin/camera_pitch.rotation.x + x_rotate_distance <= -PI/2:
 				x_rotate_distance = -PI/2 - $camera_origin/camera_pitch.rotation.x
 			$camera_origin/camera_pitch.rotate_object_local(Vector3(1,0,0), x_rotate_distance)
-
-	# velocity = Vector2(1, 0).rotated(rotation) * run_speed
 
 
 func _process(delta):
@@ -155,7 +154,7 @@ func _process(delta):
 		local_direction += Vector2(1,0)
 
 	if local_direction != Vector2(0,0)  && !is_popup_showing:
-		velocity = local_direction.normalized().rotated($camera_origin.rotation.y) * ($camera_origin/camera_pitch/camera.translation.z*camera_speed_mod+1) * speed * delta
+		var velocity = local_direction.normalized().rotated($camera_origin.rotation.y) * ($camera_origin/camera_pitch/camera.translation.z*camera_speed_mod+1) * speed * delta
 		$camera_origin.translation.x += velocity.y
 		$camera_origin.translation.z += velocity.x
 
@@ -180,33 +179,31 @@ func _process(delta):
 					should_disable_share_button = false
 
 		$GameMenu.set_share_room_disabled(should_disable_share_button)
-		
-	if rotate_mode_enabled:
-		var intersection_point = get_mouse_floor_intersection(get_viewport().get_mouse_position())
-		if intersection_point != null:
-			
+
+	if left_click_action == LeftClickAction.ROTATE_SELECTED:
+		assert(selected_object != null)
+		var mouse_floor_intersection = get_mouse_floor_intersection(get_viewport().get_mouse_position())
+		if mouse_floor_intersection != null:
 			var selected_position = selected_object.global_transform.origin
 			var selected_direction = selected_object.global_transform.basis.z
-			var target_direction = intersection_point - selected_position
-			var angle_to_target = selected_direction.angle_to(target_direction)
-#			print("angle", angle_to_target)
-			
+			var target_direction = mouse_floor_intersection - selected_position
+
 			var draw_node = get_node("Draw")
-			draw_node.set_material_override(material)
+			draw_node.set_material_override(draw_material)
 			draw_node.clear()
 			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
-			draw_node.add_vertex(intersection_point)
-			draw_node.add_vertex(intersection_point + Vector3(0,1,0))
+			# Draw small vertical line at intersection
+			draw_node.add_vertex(mouse_floor_intersection)
+			draw_node.add_vertex(mouse_floor_intersection + Vector3(0,1,0))
 
 			selected_position.y = 0.1
-			intersection_point.y = 0.1
-
+			mouse_floor_intersection.y = 0.1
+			# Draw line from selected object to intersection
 			draw_node.add_vertex(selected_position)
-			draw_node.add_vertex(intersection_point)
-			
+			draw_node.add_vertex(mouse_floor_intersection)
+			# Draw facing direction of selected object
 			draw_node.add_vertex(selected_position)
 			draw_node.add_vertex(selected_position + selected_direction * 2)
-			
 			draw_node.end()
 
 
@@ -339,12 +336,18 @@ func _on_GameMenu_create_mini(name, color, model_index):
 
 
 func _on_GameMenu_delete():
-	selected_object.delete()
+	var to_delete = selected_object
+	change_left_click_action(LeftClickAction.SELECT)
+	to_delete.delete()
 	redraw_gridmap_tiles()
+	assert(selected_object == null)
 
 
 func _on_GameMenu_toggle_ping(is_enabled):
-	ping_on_click_enabled = is_enabled
+	if is_enabled:
+		change_left_click_action(LeftClickAction.PING)
+	else:
+		change_left_click_action(LeftClickAction.SELECT)
 
 
 func _on_GameMenu_toggle_walls(show_walls):
@@ -362,6 +365,64 @@ func _on_GameMenu_down_level():
 
 func _on_GameMenu_popup_toggled(is_showing):
 	is_popup_showing = is_showing
+
+
+func change_left_click_action(new_action):
+	if new_action == left_click_action:
+		return
+
+	# Run logic when exiting the current action
+	match left_click_action:
+#		LeftClickAction.SELECT:
+#			print("exiting LeftClickAction.SELECT")
+		LeftClickAction.MOVE_SELECTED:
+#			print("exiting LeftClickAction.MOVE_SELECTED")
+			if new_action != LeftClickAction.ROTATE_SELECTED:
+				deselect_object()
+		LeftClickAction.ROTATE_SELECTED:
+#			print("exiting LeftClickAction.ROTATE_SELECTED")
+			if new_action != LeftClickAction.MOVE_SELECTED:
+				deselect_object()
+			var draw_node = get_node("Draw")
+			draw_node.set_material_override(draw_material)
+			draw_node.clear()
+			draw_node.end()
+		LeftClickAction.PING:
+#			print("exiting LeftClickAction.PING")
+			$GameMenu.set_ping_pressed(false)
+
+	# Change the current action
+	left_click_action = new_action
+
+	# Run logic when entering the new action
+#	match left_click_action:
+#		LeftClickAction.SELECT:
+#			print("entering LeftClickAction.SELECT")
+#		LeftClickAction.MOVE_SELECTED:
+#			print("entering LeftClickAction.MOVE_SELECTED")
+#		LeftClickAction.ROTATE_SELECTED:
+#			print("entering LeftClickAction.ROTATE_SELECTED")
+#		LeftClickAction.PING:
+#			print("entering LeftClickAction.PING")
+
+
+func select_object(object):
+	object.set_object_selected()
+	selected_object = object
+	$GameMenu.set_object_selected(true)
+
+
+func deselect_object():
+	selected_object.set_object_deselected()
+	selected_object = null
+	$GameMenu.set_object_selected(false)
+
+
+func toggle_rotate_mode():
+	if left_click_action == LeftClickAction.ROTATE_SELECTED:
+		change_left_click_action(LeftClickAction.MOVE_SELECTED)
+	elif left_click_action  == LeftClickAction.MOVE_SELECTED:
+		change_left_click_action(LeftClickAction.ROTATE_SELECTED)
 
 
 func get_mouse_floor_intersection(screen_position, height = 0):
@@ -384,49 +445,6 @@ func get_mouse_floor_intersection(screen_position, height = 0):
 		print("Caught a div by zero in tile lookup")
 
 	return null
-
-
-func deselect_object():
-	selected_object.set_object_deselected()
-
-	# var surface_material = selected_object.get_node("mesh").get_surface_material(0)
-	# surface_material.set_shader_param("enable", false)
-	# surface_material.next_pass.set_shader_param("enable", false)
-
-	selected_object = null
-	$GameMenu.set_object_selected(false)
-
-
-func select_object(object):
-	object.set_object_selected()
-
-	# var surface_material = object.get_node("mesh").get_surface_material(0)
-	# surface_material.set_shader_param("enable", true)
-	# surface_material.next_pass.set_shader_param("enable", true)
-
-	selected_object = object
-	$GameMenu.set_object_selected(true)
-
-
-func toggle_rotate_mode():
-	if rotate_mode_enabled:
-		exit_rotate_mode()
-	else:
-		enter_rotate_mode()
-
-
-func enter_rotate_mode():
-	print("enter_rotate_mode")
-	rotate_mode_enabled = true
-
-
-func exit_rotate_mode():
-	print("exit_rotate_mode")
-	rotate_mode_enabled = false
-	var draw_node = get_node("Draw")
-	draw_node.set_material_override(material)
-	draw_node.clear()
-	draw_node.end()
 
 
 remotesync func ping_NETWORK(position):

@@ -88,7 +88,7 @@ remotesync func move_to_NETWORK(coordinate, target_floor):
 	self._target_position = coordinate
 	self.floor_number = target_floor
 	hide_show_on_floor()
-	self._translation_animation = true
+	self._position_animation = true
 
 
 func rotate_to(target_direction):
