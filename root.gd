@@ -36,12 +36,13 @@ var minis = {}
 var circles = {}
 var squares = {}
 
+# [style, tile_size, rotation_offset, name_height, filename] 
 var models = [
-	["Paladin", 1, 2.6, "paladin.tres"],
-	["Explorer", 1, 2.4, "explorer.tres"],
-	["Monster", 1, 2.4, "monster.tres"],
-	["Big Monster", 2, 3.2, "bigmonster.tres"],
-	["Avallach", 1, 2.6, "avallach.tres"],
+	["Paladin", 1, 240, 2.6, "paladin.tres"],
+	["Explorer", 1, 240, 2.4, "explorer.tres"],
+	["Monster", 1, 255, 2.4, "monster.tres"],
+	["Big Monster", 2, 270, 3.2, "bigmonster.tres"],
+	["Avallach", 1, 90, 2.6, "avallach.tres"],
 ]
 
 var tile_rotations = [0, 10, 16, 22]
@@ -968,14 +969,10 @@ remotesync func create_mini(id, color, style, name, floor_number, position):
 	var mini = load("res://mini.tscn").instance()
 	mini.name = id
 
-	 # tile size
-	 # height
-	models[style][3] # resource path
-	# This will matter for larger units
-	mini.tile_size = models[style][1]
-	mini.get_node("name").translation.y = models[style][2]
-	# print(models[style][3])
-	mini.get_node("mesh").mesh = load("res://mini_meshes/"+models[style][3])
+	mini.tile_size = models[style][1] # This will matter for larger units
+	mini.get_node("mesh").rotation_degrees.y = models[style][2]
+	mini.get_node("name").translation.y = models[style][3]
+	mini.get_node("mesh").mesh = load("res://mini_meshes/" + models[style][4])
 
 	var label = mini.get_node("name/viewport/name/center/label")
 	label.text = name
