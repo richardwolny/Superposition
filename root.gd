@@ -22,6 +22,7 @@ var models = [
 	["Monster", 1, 2.4, "monster.tres"],
 	["Big Monster", 2, 3.2, "bigmonster.tres"],
 	["Avallach", 1, 2.6, "avallach.tres"],
+	["Lelyvia", 1, 2.6, "lelyvia.tres"],
 ]
 
 var selected_object = null
