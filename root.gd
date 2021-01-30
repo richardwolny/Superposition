@@ -71,8 +71,8 @@ func _unhandled_input(event):
 		if event.pressed and not event.echo:
 			if event.scancode == KEY_ESCAPE:
 				change_left_click_action(LeftClickAction.SELECT)
-			if event.scancode == KEY_R:
-				toggle_rotate_mode()
+			if event.scancode == KEY_SPACE:
+				cycle_movement_action()
 	if event is InputEventMouseButton:
 		if event.pressed:
 			if event.button_index == BUTTON_WHEEL_UP:
@@ -88,7 +88,7 @@ func _unhandled_input(event):
 				var floor_target = get_mouse_floor_intersection(event.position)
 				match left_click_action:
 					LeftClickAction.SELECT:
-						print("executing LeftClickAction.SELECT")
+#						print("executing LeftClickAction.SELECT")
 						var camera = $camera_origin/camera_pitch/camera
 						var start_coordinate = camera.project_ray_origin(event.position)
 						var end_coordinate = start_coordinate + camera.project_ray_normal(event.position) * ray_length
@@ -99,22 +99,22 @@ func _unhandled_input(event):
 								select_object(result.collider)
 								change_left_click_action(LeftClickAction.MOVE_SELECTED)
 					LeftClickAction.MOVE_SELECTED:
-						print("executing LeftClickAction.MOVE_SELECTED")
+#						print("executing LeftClickAction.MOVE_SELECTED")
 						assert(selected_object != null)
 						if floor_target != null:
 							selected_object.move_to(floor_target, current_floor)
 							change_left_click_action(LeftClickAction.SELECT)
 					LeftClickAction.ROTATE_SELECTED:
-						print("executing LeftClickAction.ROTATE_SELECTED")
+#						print("executing LeftClickAction.ROTATE_SELECTED")
 						assert(selected_object != null)
 						if floor_target != null:
 							selected_object.rotate_to(floor_target)
 							change_left_click_action(LeftClickAction.SELECT)
 					LeftClickAction.PING:
-						print("executing LeftClickAction.PING")
+#						print("executing LeftClickAction.PING")
 						rpc("ping_NETWORK", floor_target)
 					_:
-						print("executing invalid LeftClickAction")
+						print("tried to execute invalid LeftClickAction")
 						assert(true)
 		else:
 			if event.button_index == BUTTON_RIGHT:
@@ -407,6 +407,16 @@ func change_left_click_action(new_action):
 #			print("entering LeftClickAction.PING")
 
 
+func cycle_movement_action():
+	# Only cycles the LeftCLickAction's that pertain to object movement
+	# i.e. Not PING or SELECT
+	match left_click_action:
+		LeftClickAction.MOVE_SELECTED:
+			change_left_click_action(LeftClickAction.ROTATE_SELECTED)
+		LeftClickAction.ROTATE_SELECTED:
+			change_left_click_action(LeftClickAction.MOVE_SELECTED)
+
+
 func select_object(object):
 	object.set_object_selected()
 	selected_object = object
@@ -417,13 +427,6 @@ func deselect_object():
 	selected_object.set_object_deselected()
 	selected_object = null
 	$GameMenu.set_object_selected(false)
-
-
-func toggle_rotate_mode():
-	if left_click_action == LeftClickAction.ROTATE_SELECTED:
-		change_left_click_action(LeftClickAction.MOVE_SELECTED)
-	elif left_click_action  == LeftClickAction.MOVE_SELECTED:
-		change_left_click_action(LeftClickAction.ROTATE_SELECTED)
 
 
 func get_mouse_floor_intersection(screen_position, height = 0):

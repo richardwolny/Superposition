@@ -3,7 +3,7 @@ extends "res://object.gd"
 
 func _ready():
 	self.movement_speed = 20
-	self.rotation_speed = 1
+	self.rotation_speed = 8
 
 
 func set_object_selected():

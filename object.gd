@@ -4,7 +4,7 @@ extends StaticBody
 const FLOATMATH_FUZZ = 0.00001
 
 var movement_speed = 20
-var rotation_speed = 1
+var rotation_speed = 8
 var floor_number = 0
 var tile_size
 
