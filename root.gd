@@ -38,12 +38,12 @@ var squares = {}
 
 # [style, tile_size, rotation_offset, name_height, filename] 
 var models = [
-	["Paladin", 1, 240, 2.6, "paladin.tres"],
-	["Explorer", 1, 240, 2.4, "explorer.tres"],
-	["Monster", 1, 255, 2.4, "monster.tres"],
+	["Paladin", 1, 270, 2.6, "paladin.tres"],
+	["Explorer", 1, 270, 2.4, "explorer.tres"],
+	["Monster", 1, 270, 2.4, "monster.tres"],
 	["Big Monster", 2, 270, 3.2, "bigmonster.tres"],
-	["Avallach", 1, 240, 2.6, "avallach.tres"],
-	["Lelyvia", 1, 240, 2.6, "lelyvia.tres"],
+	["Avallach", 1, 270, 2.6, "avallach.tres"],
+	["Lelyvia", 1, 270, 2.6, "lelyvia.tres"],
 ]
 
 var tile_rotations = [0, 10, 16, 22]
