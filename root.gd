@@ -42,7 +42,8 @@ var models = [
 	["Explorer", 1, 240, 2.4, "explorer.tres"],
 	["Monster", 1, 255, 2.4, "monster.tres"],
 	["Big Monster", 2, 270, 3.2, "bigmonster.tres"],
-	["Avallach", 1, 90, 2.6, "avallach.tres"],
+	["Avallach", 1, 240, 2.6, "avallach.tres"],
+	["Lelyvia", 1, 240, 2.6, "lelyvia.tres"],
 ]
 
 var tile_rotations = [0, 10, 16, 22]
@@ -55,6 +56,9 @@ var rooms = []
 # A client side sparse list of rooms
 var shared_rooms = {}
 
+
+const mini_scene = preload("res://mini.tscn")
+const ping_scene = preload("res://ping.tscn")
 
 func _ready():
 	if Network.connect('player_connected', self, '_on_Network_player_connected') != OK:
@@ -452,7 +456,7 @@ func get_mouse_floor_intersection(screen_position, height = 0):
 
 
 remotesync func ping_NETWORK(position):
-	var ping = load("res://ping.tscn").instance()
+	var ping = ping_scene.instance()
 	ping.translation.x = position.x
 	ping.translation.z = position.z
 
@@ -843,42 +847,65 @@ func load_room_from_file(filename):
 	share_room(sparse_map_lookup(full_sparse_map,0,0,0).rooms[0])
 
 
-func build_room(x,y,z, sparsemap, room):
-	x = int(x)
-	y = int(y)
-	z = int(z)
+func build_room(start_x: int, start_y:int , start_z:int, sparsemap, room):
+	var tiles_to_check = [
+		[start_x, start_y, start_z]
+	]
 
-	var tile = sparse_map_lookup(sparsemap, x,y,z)
-	if tile == null:
-		return room
+	while(len(tiles_to_check) > 0):
+		var tile_coordinate = tiles_to_check.pop_front()
+		var x = int(tile_coordinate[0])
+		var y = int(tile_coordinate[1])
+		var z = int(tile_coordinate[2])
 
-	if room.has([x,y,z]):
-		return room
-	elif tile.tile_type == "floor" || tile.tile_type == "start":
-		room.append([x,y,z])
-		room = build_room(x+1, y, z, sparsemap, room)
-		room = build_room(x-1, y, z, sparsemap, room)
-		room = build_room(x, y+1, z, sparsemap, room)
-		room = build_room(x, y-1, z, sparsemap, room)
-		return room
-	elif tile.tile_type == "door" || tile.tile_type == "hiddendoor":
-		room.append([x,y,z])
-		return room
-	elif tile.tile_type == "stairsup":
-		if sparse_map_lookup(sparsemap, x, y, z+1).tile_type != "stairsdown":
-			print("ERROR: NON MATCHING STAIRS")
-		room.append([x,y,z])
-		room.append([x,y,z+1])
-		return room
-	elif tile.tile_type == "stairsdown":
-		if sparse_map_lookup(sparsemap, x, y, z-1).tile_type != "stairsup":
-			print("ERROR: NON MATCHING STAIRS")
-		room.append([x,y,z])
-		room.append([x,y,z-1])
-		return room
-	else:
-		print("UNKNOWN TYPE", tile.tile_type)
+		# If there is no tile in this spot then ignore this tile
+		var tile = sparse_map_lookup(sparsemap, x,y,z)
+		if tile == null:
+			continue
 
+		# If we have already added this tile to the room then ignore this tile
+		if room.has([x,y,z]):
+			continue
+
+		# If the tile is a floor tile, which could extend the room to other
+		# tiles, add this tile to the room and add the possible adjacent tiles
+		# to the list of tiles to check for in future loops.
+		if tile.tile_type == "floor" || tile.tile_type == "start":
+			room.append([x,y,z])
+
+			tiles_to_check.append([x+1, y, z])
+			tiles_to_check.append([x-1, y, z])
+			tiles_to_check.append([x, y+1, z])
+			tiles_to_check.append([x, y-1, z])
+
+		# If the tile is a blocker-type tile that would prevent the room from
+		# expanding, then add the tile to the room and do not add further
+		# adjacent tiles to it.
+		# NOTE: Stairs are excluded here due to technically being two tiles
+		#       one on each floor, and thus needing a bit more logic
+		elif tile.tile_type == "door" || tile.tile_type == "hiddendoor":
+			room.append([x,y,z])
+
+		# If the tile is a stair, treat it as a blocker-type tile, but add both
+		# the stair and its pair to the room.
+		elif tile.tile_type == "stairsup":
+			if sparse_map_lookup(sparsemap, x, y, z+1).tile_type != "stairsdown":
+				print("ERROR: NON MATCHING STAIRS")
+			room.append([x,y,z])
+			room.append([x,y,z+1])
+
+		elif tile.tile_type == "stairsdown":
+			if sparse_map_lookup(sparsemap, x, y, z-1).tile_type != "stairsup":
+				print("ERROR: NON MATCHING STAIRS")
+			room.append([x,y,z])
+			room.append([x,y,z-1])
+
+		# If we have not caught the tile type then it is an unknown type and
+		# we should yell at someone.
+		else:
+			print("UNKNOWN TYPE", tile.tile_type)
+
+	return room
 
 func load_file(filename):
 	var floors = []
@@ -963,13 +990,12 @@ func resend_objects():
 			circle.object.translation
 		)
 
-
 remotesync func create_mini(id, color, style, name, floor_number, position):
 	if minis.has(id):
 		print("WARNING: mini id already exists!")
 		return
 
-	var mini = load("res://mini.tscn").instance()
+	var mini = mini_scene.instance()
 	mini.name = id
 
 	mini.tile_size = models[style][1] # This will matter for larger units

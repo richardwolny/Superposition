@@ -1,5 +1,6 @@
 extends StaticBody
 
+signal animation_finished
 
 const FLOATMATH_FUZZ = 0.00001
 
