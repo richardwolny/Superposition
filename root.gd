@@ -52,6 +52,8 @@ const tile_types = {
 
 const ignored_characters = ["A", " "]
 
+const hero_scene = preload("res://hero.tscn")
+const ping_scene = preload("res://ping.tscn")
 
 func _ready():
 	if Network.connect('player_connected', self, '_on_Network_player_connected') != OK:
@@ -373,7 +375,7 @@ func select_object(object):
 
 
 remotesync func ping_NETWORK(position):
-	var ping = load("res://ping.tscn").instance()
+	var ping = ping_scene.instance()
 	ping.translation.x = position.x
 	ping.translation.z = position.z
 
@@ -912,13 +914,12 @@ func resend_objects():
 			circle.object.translation
 		)
 
-
 remotesync func create_mini(id, color, style, name, floor_number, position):
 	if minis.has(id):
 		print("WARNING: mini id already exists!")
 		return
 
-	var mini = load("res://hero.tscn").instance()
+	var mini = hero_scene.instance()
 	mini.name = id
 
 	 # tile size
