@@ -61,6 +61,10 @@ func set_object_selected(is_selected):
 		$PlayerControls/Delete.disabled = true
 
 
+func set_ping_pressed(is_pressed):
+	$PlayerControls/Ping.pressed = is_pressed
+
+
 func set_current_floor(current_floor):
 	$PlayerControls/Floor.text = "Floor: " + str(current_floor)
 
