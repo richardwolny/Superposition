@@ -59,6 +59,8 @@ var shared_rooms = {}
 
 const mini_scene = preload("res://mini.tscn")
 const ping_scene = preload("res://ping.tscn")
+const square_aoe_scene = preload("res://square_aoe.tscn")
+const circle_aoe_scene = preload("res://circle_aoe.tscn")
 
 func _ready():
 	if Network.connect('player_connected', self, '_on_Network_player_connected') != OK:
@@ -1036,7 +1038,7 @@ remotesync func create_square(id, color, size, name, floor_number, position):
 		print("WARNING: square id already exists!")
 		return
 
-	var square = load("res://square_aoe.tscn").instance()
+	var square = square_aoe_scene.instance()
 	square.name = id
 	square.tile_size = size
 
@@ -1092,7 +1094,7 @@ remotesync func create_circle(id, color, size, name, floor_number, position):
 		print("WARNING: circle id already exists!")
 		return
 
-	var circle = load("res://circle_aoe.tscn").instance()
+	var circle = circle_aoe_scene.instance()
 	circle.name = id
 	circle.tile_size = size
 

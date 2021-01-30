@@ -7,6 +7,7 @@
 viewport_path = NodePath("sprite/viewport")
 
 [sub_resource type="CylinderShape" id=2]
+resource_local_to_scene = true
 radius = 3.0
 height = 0.4
 
