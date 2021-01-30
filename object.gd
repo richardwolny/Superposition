@@ -1,5 +1,7 @@
 extends StaticBody
 
+signal animation_finished
+
 var target_position = Vector2(1,1)
 var target_rotation = 0
 
