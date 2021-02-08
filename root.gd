@@ -585,6 +585,8 @@ func redraw_gridmap_tiles():
 							# Split Walls (5)
 							"1100": [5, 0],
 							"0011": [5, 2],
+							# Full Walls (9)
+							"1111": [9, 0]
 						}
 						$gridmap.set_cell_item (x, 0, y, rotation_mapping[key][0], tile_rotations[rotation_mapping[key][1]])
 				else:
