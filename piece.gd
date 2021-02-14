@@ -1,3 +1,4 @@
+class_name Piece
 extends StaticBody
 
 signal animation_finished
@@ -51,13 +52,13 @@ func _process(delta):
 		self.rotate_y(angle_to_target)
 
 
-func set_object_selected():
+func set_selected():
 	var surface_material = self.get_node("mesh").get_surface_material(0)
 	surface_material.set_shader_param("enable", true)
 	surface_material.next_pass.set_shader_param("enable", true)
 
 
-func set_object_deselected():
+func set_deselected():
 	var surface_material = self.get_node("mesh").get_surface_material(0)
 	surface_material.set_shader_param("enable", false)
 	surface_material.next_pass.set_shader_param("enable", false)
@@ -68,9 +69,9 @@ func end_move_floor_change():
 
 
 func hide_show_on_floor():
-	var root = get_tree().get_root().get_node("root")
-	if root.current_floor+0.9 > self.floor_number && root.current_floor - 0.9 < self.floor_number:
-		self.transform.origin.y = (self.floor_number - root.current_floor)*2
+	var main = get_tree().get_root().get_node("Main")
+	if main.current_floor+0.9 > self.floor_number && main.current_floor - 0.9 < self.floor_number:
+		self.transform.origin.y = (self.floor_number - main.current_floor)*2
 	else:
 		self.transform.origin.y = 99999999
 
@@ -111,13 +112,13 @@ func delete():
 
 
 remotesync func delete_NETWORK():
-	var root = get_tree().get_root().get_node("root")
-	if root.selected_object == self:
-		root.deselect_object()
+	var main = get_tree().get_root().get_node("Main")
+	if main.selected_object == self:
+		main.deselect_object()
 	self.queue_free()
-	if root.circles.has(self.name):
-		root.circles.erase(self.name)
-	if root.squares.has(self.name):
-		root.squares.erase(self.name)
-	if root.minis.has(self.name):
-		root.minis.erase(self.name)
+	if main.circles.has(self.name):
+		main.circles.erase(self.name)
+	if main.squares.has(self.name):
+		main.squares.erase(self.name)
+	if main.minis.has(self.name):
+		main.minis.erase(self.name)

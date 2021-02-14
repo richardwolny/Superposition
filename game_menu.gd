@@ -54,7 +54,7 @@ func set_unhide_tile_disabled(disabled):
 	$RoomControls/UnhideTile.disabled = disabled
 
 
-func set_object_selected(is_selected):
+func set_selected(is_selected):
 	if is_selected:
 		$PlayerControls/Delete.disabled = false
 	else:

@@ -56,11 +56,11 @@ var rooms = []
 # A client side sparse list of rooms
 var shared_rooms = {}
 
-
 const mini_scene = preload("res://mini.tscn")
 const ping_scene = preload("res://ping.tscn")
 const square_aoe_scene = preload("res://square_aoe.tscn")
 const circle_aoe_scene = preload("res://circle_aoe.tscn")
+
 
 func _ready():
 	if Network.connect('player_connected', self, '_on_Network_player_connected') != OK:
@@ -101,7 +101,7 @@ func _unhandled_input(event):
 						var space_state = get_world().direct_space_state
 						var result = space_state.intersect_ray(start_coordinate, end_coordinate)
 						if result:
-							if result.collider.has_method("set_object_selected"):
+							if result.collider.has_method("set_selected"):
 								select_object(result.collider)
 								change_left_click_action(LeftClickAction.MOVE_SELECTED)
 					LeftClickAction.MOVE_SELECTED:
@@ -424,15 +424,15 @@ func cycle_movement_action():
 
 
 func select_object(object):
-	object.set_object_selected()
+	object.set_selected()
 	selected_object = object
-	$GameMenu.set_object_selected(true)
+	$GameMenu.set_selected(true)
 
 
 func deselect_object():
-	selected_object.set_object_deselected()
+	selected_object.set_deselected()
 	selected_object = null
-	$GameMenu.set_object_selected(false)
+	$GameMenu.set_selected(false)
 
 
 func get_mouse_floor_intersection(screen_position, height = 0):
