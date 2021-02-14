@@ -8,6 +8,14 @@ enum LeftClickAction {
 	PING,
 }
 
+enum SnapMode {
+	OFF,
+	CENTER,
+	CORNER,
+	EDGE_X,
+	EDGE_Z,
+}
+
 const mouse_speed = 0.003
 const camera_speed_mod = .1
 const zoom_speed = 0.5
@@ -22,9 +30,12 @@ const tile_types = {
 	"start": 8,
 }
 const ignored_characters = ["A", " "]
+const draw_height = 0.1
+const draw_width = 0.5
 
 var left_click_action = LeftClickAction.SELECT
 var right_mouse_button_pressed = false
+var snap_mode = SnapMode.CENTER
 
 var selected_object = null
 var draw_material = SpatialMaterial.new()
@@ -79,6 +90,8 @@ func _unhandled_input(event):
 				change_left_click_action(LeftClickAction.SELECT)
 			if event.scancode == KEY_SPACE:
 				cycle_movement_action()
+			if event.scancode == KEY_TAB:
+				cycle_snap_mode()
 	if event is InputEventMouseButton:
 		if event.pressed:
 			if event.button_index == BUTTON_WHEEL_UP:
@@ -108,7 +121,7 @@ func _unhandled_input(event):
 #						print("executing LeftClickAction.MOVE_SELECTED")
 						assert(selected_object != null)
 						if floor_target != null:
-							selected_object.move_to(floor_target, current_floor)
+							selected_object.move_to(compute_snapped_position(floor_target), current_floor)
 							change_left_click_action(LeftClickAction.SELECT)
 					LeftClickAction.ROTATE_SELECTED:
 #						print("executing LeftClickAction.ROTATE_SELECTED")
@@ -187,31 +200,41 @@ func _process(delta):
 
 		$GameMenu.set_share_room_disabled(should_disable_share_button)
 
-	if left_click_action == LeftClickAction.ROTATE_SELECTED:
-		assert(selected_object != null)
-		var mouse_floor_intersection = get_mouse_floor_intersection(get_viewport().get_mouse_position())
-		if mouse_floor_intersection != null:
-			var selected_position = selected_object.global_transform.origin
-			var selected_direction = selected_object.global_transform.basis.z
-			var target_direction = mouse_floor_intersection - selected_position
+	match left_click_action:
+		LeftClickAction.SELECT:
+			pass
+		LeftClickAction.MOVE_SELECTED:
+			assert(selected_object != null)
+			var mouse_floor_intersection = get_mouse_floor_intersection(get_viewport().get_mouse_position())
+			if mouse_floor_intersection != null:
+				var snapped_position = compute_snapped_position(mouse_floor_intersection)
+				draw_snapped_position(snapped_position)
+		LeftClickAction.ROTATE_SELECTED:
+			assert(selected_object != null)
+			var mouse_floor_intersection = get_mouse_floor_intersection(get_viewport().get_mouse_position())
+			if mouse_floor_intersection != null:
+				var selected_position = selected_object.global_transform.origin
+				var selected_direction = selected_object.global_transform.basis.z
+				var target_direction = mouse_floor_intersection - selected_position
 
-			var draw_node = get_node("Draw")
-			draw_node.set_material_override(draw_material)
-			draw_node.clear()
-			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
-			# Draw small vertical line at intersection
-			draw_node.add_vertex(mouse_floor_intersection)
-			draw_node.add_vertex(mouse_floor_intersection + Vector3(0,1,0))
-
-			selected_position.y = 0.1
-			mouse_floor_intersection.y = 0.1
-			# Draw line from selected object to intersection
-			draw_node.add_vertex(selected_position)
-			draw_node.add_vertex(mouse_floor_intersection)
-			# Draw facing direction of selected object
-			draw_node.add_vertex(selected_position)
-			draw_node.add_vertex(selected_position + selected_direction * 2)
-			draw_node.end()
+				var draw_node = get_node("Draw")
+				draw_node.set_material_override(draw_material)
+				draw_node.clear()
+				draw_node.begin(Mesh.PRIMITIVE_LINES, null)
+				# Draw small vertical line at intersection
+				draw_node.add_vertex(mouse_floor_intersection)
+				draw_node.add_vertex(mouse_floor_intersection + Vector3(0,1,0))
+				selected_position.y = 0.1
+				mouse_floor_intersection.y = 0.1
+				# Draw line from selected object to intersection
+				draw_node.add_vertex(selected_position)
+				draw_node.add_vertex(mouse_floor_intersection)
+				# Draw facing direction of selected object
+				draw_node.add_vertex(selected_position)
+				draw_node.add_vertex(selected_position + selected_direction * 2)
+				draw_node.end()
+		LeftClickAction.PING:
+			pass
 
 
 func _on_Network_player_connected():
@@ -386,6 +409,10 @@ func change_left_click_action(new_action):
 #			print("exiting LeftClickAction.MOVE_SELECTED")
 			if new_action != LeftClickAction.ROTATE_SELECTED:
 				deselect_object()
+			var draw_node = get_node("Draw")
+			draw_node.set_material_override(draw_material)
+			draw_node.clear()
+			draw_node.end()
 		LeftClickAction.ROTATE_SELECTED:
 #			print("exiting LeftClickAction.ROTATE_SELECTED")
 			if new_action != LeftClickAction.MOVE_SELECTED:
@@ -421,6 +448,91 @@ func cycle_movement_action():
 			change_left_click_action(LeftClickAction.ROTATE_SELECTED)
 		LeftClickAction.ROTATE_SELECTED:
 			change_left_click_action(LeftClickAction.MOVE_SELECTED)
+
+
+func cycle_snap_mode():
+	match snap_mode:
+		SnapMode.OFF:
+			snap_mode = SnapMode.CENTER
+		SnapMode.CENTER:
+			snap_mode = SnapMode.CORNER
+		SnapMode.CORNER:
+			snap_mode = SnapMode.EDGE_X
+		SnapMode.EDGE_X:
+			snap_mode = SnapMode.EDGE_Z
+		SnapMode.EDGE_Z:
+			snap_mode = SnapMode.OFF
+
+
+func tile_center(value: float) -> float:
+	return floor(value / 2) * 2 + 1
+
+
+func tile_edge(value: float) -> float:
+	return floor((value + 1) / 2) * 2
+
+
+func compute_snapped_position(position: Vector3) -> Vector3:
+	match snap_mode:
+		SnapMode.OFF:
+			return position
+		SnapMode.CENTER:
+			return Vector3(
+				tile_center(position.x),
+				position.y,
+				tile_center(position.z)
+			)
+		SnapMode.CORNER:
+			return Vector3(
+				tile_edge(position.x),
+				position.y,
+				floor((position.z + 1) / 2) * 2
+			)
+		SnapMode.EDGE_X:
+			return Vector3(
+				tile_edge(position.x),
+				position.y,
+				tile_center(position.z)
+			)
+		SnapMode.EDGE_Z:
+			return Vector3(
+				tile_center(position.x),
+				position.y,
+				tile_edge(position.z)
+			)
+	return position
+
+
+func draw_snapped_position(position: Vector3) -> void:
+	var draw_node = get_node("Draw")
+	draw_node.set_material_override(draw_material)
+	draw_node.clear()
+	match snap_mode:
+		SnapMode.OFF:
+			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
+			draw_node.add_vertex(position)
+			draw_node.add_vertex(position + Vector3(0,1,0))
+		SnapMode.CENTER:
+			draw_node.begin(Mesh.PRIMITIVE_LINE_LOOP, null)
+			draw_node.add_vertex(position + Vector3(-draw_width,draw_height,-draw_width))
+			draw_node.add_vertex(position + Vector3(-draw_width,draw_height,draw_width))
+			draw_node.add_vertex(position + Vector3(draw_width,draw_height,draw_width))
+			draw_node.add_vertex(position + Vector3(draw_width,draw_height,-draw_width))
+		SnapMode.CORNER:
+			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
+			draw_node.add_vertex(position + Vector3(-draw_width,draw_height,0))
+			draw_node.add_vertex(position + Vector3(draw_width,draw_height,0))
+			draw_node.add_vertex(position + Vector3(0,draw_height,-draw_width))
+			draw_node.add_vertex(position + Vector3(0,draw_height,draw_width))
+		SnapMode.EDGE_X:
+			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
+			draw_node.add_vertex(position + Vector3(0,draw_height,-draw_width))
+			draw_node.add_vertex(position + Vector3(0,draw_height,draw_width))
+		SnapMode.EDGE_Z:
+			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
+			draw_node.add_vertex(position + Vector3(-draw_width,draw_height,0))
+			draw_node.add_vertex(position + Vector3(draw_width,draw_height,0))
+	draw_node.end()
 
 
 func select_object(object):

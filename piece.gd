@@ -76,23 +76,12 @@ func hide_show_on_floor():
 		self.transform.origin.y = 99999999
 
 
-func move_to(coordinate, target_floor):
-	var snapped_centerpoint = Vector2(
-			floor(coordinate.x / 2) * 2 + 1,
-			floor(coordinate.z / 2) * 2 + 1
-		)
-
-	if tile_size % 2 == 0:
-		snapped_centerpoint = Vector2(
-			floor((coordinate.x + 1) / 2) * 2,
-			floor((coordinate.z + 1) / 2) * 2
-		)
-
-	rpc("move_to_NETWORK", snapped_centerpoint, target_floor)
+func move_to(position: Vector3, target_floor: int) -> void:
+	rpc("move_to_NETWORK", position, target_floor)
 
 
-remotesync func move_to_NETWORK(coordinate, target_floor):
-	self._target_position = coordinate
+remotesync func move_to_NETWORK(position: Vector3, target_floor:int) -> void:
+	self._target_position = Vector2(position.x, position.z)
 	self.floor_number = target_floor
 	hide_show_on_floor()
 	self._position_animation = true
