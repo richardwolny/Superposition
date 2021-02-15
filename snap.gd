@@ -10,7 +10,7 @@ enum MoveMode {
 	EDGE_Z,
 }
 
-var manual_options_enabled: bool = true
+var manual_options_enabled: bool = false
 var move_mode: int = MoveMode.AUTO
 
 

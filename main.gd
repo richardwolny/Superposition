@@ -72,17 +72,6 @@ func _ready():
 	draw_material.flags_use_point_size = true
 	draw_material.albedo_color = Color.red
 
-	var draw_node = get_node("Draw")
-	draw_node.set_material_override(draw_material)
-	draw_node.clear()
-	draw_node.begin(Mesh.PRIMITIVE_LINES, null)
-	draw_node.add_vertex(Vector3(0,0,0))
-	draw_node.add_vertex(Vector3(5,0,0))
-	draw_node.add_vertex(Vector3(0,0,0))
-	draw_node.add_vertex(Vector3(0,1,0))
-	draw_node.add_vertex(Vector3(0,0,0))
-	draw_node.add_vertex(Vector3(0,0,1))
-	draw_node.end()
 
 func _unhandled_input(event):
 	if event is InputEventKey:
