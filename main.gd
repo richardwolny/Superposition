@@ -8,15 +8,6 @@ enum LeftClickAction {
 	PING,
 }
 
-enum SnapMode {
-	OFF,
-	AUTO,
-	CENTER,
-	CORNER,
-	EDGE_X,
-	EDGE_Z,
-}
-
 const mouse_speed: float = 0.003
 const camera_speed_mod: float = .1
 const zoom_speed: float = 0.5
@@ -37,8 +28,6 @@ const DRAW_WIDTH: float = 0.5
 var right_mouse_button_pressed: bool = false
 var left_click_action: int = LeftClickAction.SELECT
 var selected_object: Piece = null
-var snap_mode: int = SnapMode.AUTO
-var manual_snap_enabled: bool = true
 var draw_material: SpatialMaterial = SpatialMaterial.new()
 
 var is_popup_showing := false
@@ -83,6 +72,17 @@ func _ready():
 	draw_material.flags_use_point_size = true
 	draw_material.albedo_color = Color.red
 
+	var draw_node = get_node("Draw")
+	draw_node.set_material_override(draw_material)
+	draw_node.clear()
+	draw_node.begin(Mesh.PRIMITIVE_LINES, null)
+	draw_node.add_vertex(Vector3(0,0,0))
+	draw_node.add_vertex(Vector3(5,0,0))
+	draw_node.add_vertex(Vector3(0,0,0))
+	draw_node.add_vertex(Vector3(0,1,0))
+	draw_node.add_vertex(Vector3(0,0,0))
+	draw_node.add_vertex(Vector3(0,0,1))
+	draw_node.end()
 
 func _unhandled_input(event):
 	if event is InputEventKey:
@@ -92,7 +92,8 @@ func _unhandled_input(event):
 			if event.scancode == KEY_SPACE:
 				cycle_movement_action()
 			if event.scancode == KEY_TAB:
-				cycle_snap_mode()
+				Snap.cycle_move_mode()
+				$GameMenu.update_snap_mode()
 	if event is InputEventMouseButton:
 		if event.pressed:
 			if event.button_index == BUTTON_WHEEL_UP:
@@ -451,32 +452,13 @@ func cycle_movement_action() -> void:
 			change_left_click_action(LeftClickAction.MOVE_SELECTED)
 
 
-func cycle_snap_mode() -> void:
-	match snap_mode:
-		SnapMode.OFF:
-			snap_mode = SnapMode.AUTO
-		SnapMode.AUTO:
-			if manual_snap_enabled:
-				snap_mode = SnapMode.CENTER
-			else:
-				snap_mode = SnapMode.OFF
-		SnapMode.CENTER:
-			snap_mode = SnapMode.CORNER
-		SnapMode.CORNER:
-			snap_mode = SnapMode.EDGE_X
-		SnapMode.EDGE_X:
-			snap_mode = SnapMode.EDGE_Z
-		SnapMode.EDGE_Z:
-			snap_mode = SnapMode.OFF
-
-
 func get_snap_mode_if_auto() -> int:
-	if snap_mode == SnapMode.AUTO:
+	if Snap.move_mode == Snap.MoveMode.AUTO:
 		if selected_object.tile_size % 2 == 0:
-			return SnapMode.CORNER
+			return Snap.MoveMode.CORNER
 		else:
-			return SnapMode.CENTER
-	return snap_mode
+			return Snap.MoveMode.CENTER
+	return Snap.move_mode
 
 
 func tile_center(value: float) -> float:
@@ -489,70 +471,70 @@ func tile_edge(value: float) -> float:
 
 func compute_snap_position(position: Vector3) -> Vector3:
 	var local_snap_mode = get_snap_mode_if_auto()
-	assert(local_snap_mode != SnapMode.AUTO)
+	assert(local_snap_mode != Snap.MoveMode.AUTO)
 
 	match local_snap_mode:
-		SnapMode.CENTER:
+		Snap.MoveMode.CENTER:
 			return Vector3(
 				tile_center(position.x),
 				position.y,
 				tile_center(position.z)
 			)
-		SnapMode.CORNER:
+		Snap.MoveMode.CORNER:
 			return Vector3(
 				tile_edge(position.x),
 				position.y,
 				tile_edge(position.z)
 			)
-		SnapMode.EDGE_X:
-			return Vector3(
-				tile_edge(position.x),
-				position.y,
-				tile_center(position.z)
-			)
-		SnapMode.EDGE_Z:
+		Snap.MoveMode.EDGE_X:
 			return Vector3(
 				tile_center(position.x),
 				position.y,
 				tile_edge(position.z)
+			)
+		Snap.MoveMode.EDGE_Z:
+			return Vector3(
+				tile_edge(position.x),
+				position.y,
+				tile_center(position.z)
 			)
 
-	assert(local_snap_mode == SnapMode.OFF)
+	assert(local_snap_mode == Snap.MoveMode.OFF)
 	return position
 
 
 func draw_snap_position(position: Vector3) -> void:
 	var local_snap_mode = get_snap_mode_if_auto()
-	assert(local_snap_mode != SnapMode.AUTO)
+	assert(local_snap_mode != Snap.MoveMode.AUTO)
 
 	var draw_node = get_node("Draw")
 	draw_node.set_material_override(draw_material)
 	draw_node.clear()
 	match local_snap_mode:
-		SnapMode.OFF:
+		Snap.MoveMode.OFF:
 			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
 			draw_node.add_vertex(position)
 			draw_node.add_vertex(position + Vector3(0,1,0))
-		SnapMode.CENTER:
+		Snap.MoveMode.CENTER:
 			draw_node.begin(Mesh.PRIMITIVE_LINE_LOOP, null)
 			draw_node.add_vertex(position + Vector3(-DRAW_WIDTH, DRAW_HEIGHT, -DRAW_WIDTH))
 			draw_node.add_vertex(position + Vector3(-DRAW_WIDTH, DRAW_HEIGHT, DRAW_WIDTH))
 			draw_node.add_vertex(position + Vector3(DRAW_WIDTH, DRAW_HEIGHT, DRAW_WIDTH))
 			draw_node.add_vertex(position + Vector3(DRAW_WIDTH, DRAW_HEIGHT, -DRAW_WIDTH))
-		SnapMode.CORNER:
+		Snap.MoveMode.CORNER:
 			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
 			draw_node.add_vertex(position + Vector3(-DRAW_WIDTH, DRAW_HEIGHT, 0))
 			draw_node.add_vertex(position + Vector3(DRAW_WIDTH, DRAW_HEIGHT, 0))
 			draw_node.add_vertex(position + Vector3(0, DRAW_HEIGHT, -DRAW_WIDTH))
 			draw_node.add_vertex(position + Vector3(0, DRAW_HEIGHT, DRAW_WIDTH))
-		SnapMode.EDGE_X:
-			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
-			draw_node.add_vertex(position + Vector3(0, DRAW_HEIGHT, -DRAW_WIDTH))
-			draw_node.add_vertex(position + Vector3(0, DRAW_HEIGHT, DRAW_WIDTH))
-		SnapMode.EDGE_Z:
+		Snap.MoveMode.EDGE_X:
 			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
 			draw_node.add_vertex(position + Vector3(-DRAW_WIDTH, DRAW_HEIGHT, 0))
 			draw_node.add_vertex(position + Vector3(DRAW_WIDTH, DRAW_HEIGHT, 0))
+		Snap.MoveMode.EDGE_Z:
+			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
+			draw_node.add_vertex(position + Vector3(0, DRAW_HEIGHT, -DRAW_WIDTH))
+			draw_node.add_vertex(position + Vector3(0, DRAW_HEIGHT, DRAW_WIDTH))
 	draw_node.end()
 
 

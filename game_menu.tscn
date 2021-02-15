@@ -74,8 +74,23 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="Settings" type="MenuButton" parent="PlayerControls"]
+margin_right = 63.0
+margin_bottom = 40.0
+text = "Settings"
+flat = false
+
+[node name="SnapMode" type="OptionButton" parent="PlayerControls"]
+margin_left = 67.0
+margin_right = 147.0
+margin_bottom = 40.0
+rect_min_size = Vector2( 80, 0 )
+focus_mode = 0
+enabled_focus_mode = 0
+
 [node name="CreateCircle" type="Button" parent="PlayerControls"]
-margin_right = 110.0
+margin_left = 151.0
+margin_right = 244.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
@@ -83,8 +98,8 @@ enabled_focus_mode = 0
 text = "Add Circle"
 
 [node name="CreateSquare" type="Button" parent="PlayerControls"]
-margin_left = 114.0
-margin_right = 224.0
+margin_left = 248.0
+margin_right = 341.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
@@ -92,8 +107,8 @@ enabled_focus_mode = 0
 text = "Add Square"
 
 [node name="CreateMini" type="Button" parent="PlayerControls"]
-margin_left = 228.0
-margin_right = 338.0
+margin_left = 345.0
+margin_right = 439.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
@@ -101,8 +116,8 @@ enabled_focus_mode = 0
 text = "Add Mini"
 
 [node name="Delete" type="Button" parent="PlayerControls"]
-margin_left = 342.0
-margin_right = 452.0
+margin_left = 443.0
+margin_right = 536.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
@@ -111,8 +126,8 @@ enabled_focus_mode = 0
 text = "Delete"
 
 [node name="Ping" type="Button" parent="PlayerControls"]
-margin_left = 456.0
-margin_right = 567.0
+margin_left = 540.0
+margin_right = 634.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
@@ -121,8 +136,8 @@ enabled_focus_mode = 0
 text = "Ping"
 
 [node name="Walls" type="Button" parent="PlayerControls"]
-margin_left = 571.0
-margin_right = 681.0
+margin_left = 638.0
+margin_right = 731.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
@@ -132,8 +147,8 @@ enabled_focus_mode = 0
 text = "Walls"
 
 [node name="UpLevel" type="Button" parent="PlayerControls"]
-margin_left = 685.0
-margin_right = 795.0
+margin_left = 735.0
+margin_right = 829.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
@@ -141,8 +156,8 @@ enabled_focus_mode = 0
 text = "Upstairs"
 
 [node name="DownLevel" type="Button" parent="PlayerControls"]
-margin_left = 799.0
-margin_right = 909.0
+margin_left = 833.0
+margin_right = 926.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
@@ -150,7 +165,7 @@ enabled_focus_mode = 0
 text = "Downstairs"
 
 [node name="Floor" type="Label" parent="PlayerControls"]
-margin_left = 913.0
+margin_left = 930.0
 margin_top = 13.0
 margin_right = 1024.0
 margin_bottom = 27.0
@@ -310,6 +325,7 @@ script = ExtResource( 2 )
 [connection signal="pressed" from="MapControls/LoadMap" to="." method="_on_LoadMap_pressed"]
 [connection signal="pressed" from="RoomControls/ShareRoom" to="." method="_on_ShareRoom_pressed"]
 [connection signal="pressed" from="RoomControls/UnhideTile" to="." method="_on_UnhideTile_pressed"]
+[connection signal="item_selected" from="PlayerControls/SnapMode" to="." method="_on_SnapMode_item_selected"]
 [connection signal="pressed" from="PlayerControls/CreateCircle" to="." method="_on_CreateCircle_pressed"]
 [connection signal="pressed" from="PlayerControls/CreateSquare" to="." method="_on_CreateSquare_pressed"]
 [connection signal="pressed" from="PlayerControls/CreateMini" to="." method="_on_CreateMini_pressed"]
