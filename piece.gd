@@ -1,20 +1,21 @@
 class_name Piece
 extends StaticBody
 
+
 signal animation_finished
 
-const FLOATMATH_FUZZ = 0.00001
+const FLOATMATH_FUZZ: float = 0.00001
 
-var movement_speed = 20
-var rotation_speed = 8
-var floor_number = 0
-var tile_size
+var movement_speed: float = 20.0
+var rotation_speed: float = 8.0
+var floor_number: float = 0.0
+var tile_size: int = 1
 
-var _target_position = Vector2(1, 1)
-var _target_rotation = Vector3(0, 0, 0)
+var _target_position: Vector2 = Vector2(1, 1)
+var _target_rotation: Vector3 = Vector3(0, 0, 0)
 
-var _position_animation = false
-var _rotation_animation = false
+var _position_animation: bool = false
+var _rotation_animation: bool = false
 
 
 func _process(delta):
