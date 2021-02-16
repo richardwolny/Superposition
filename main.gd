@@ -198,8 +198,7 @@ func _process(delta):
 			assert(selected_object != null)
 			var mouse_floor_intersection = get_mouse_floor_intersection(get_viewport().get_mouse_position())
 			if mouse_floor_intersection != null:
-				var snapped_position = compute_snap_position(mouse_floor_intersection)
-				draw_snap_position(snapped_position)
+				draw_snap_position(compute_snap_position(mouse_floor_intersection))
 		LeftClickAction.ROTATE_SELECTED:
 			assert(selected_object != null)
 			var mouse_floor_intersection = get_mouse_floor_intersection(get_viewport().get_mouse_position())
@@ -449,11 +448,11 @@ func get_snap_mode_if_auto() -> int:
 
 
 func tile_center(value: float) -> float:
-	return floor(value / 2) * 2 + 1
+	return floor(value / 2.0) * 2.0 + 1.0
 
 
 func tile_edge(value: float) -> float:
-	return floor((value + 1) / 2) * 2
+	return stepify(value, 2.0)
 
 
 func compute_snap_position(position: Vector3) -> Vector3:

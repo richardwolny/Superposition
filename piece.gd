@@ -18,7 +18,7 @@ var _position_animation: bool = false
 var _rotation_animation: bool = false
 
 
-func _process(delta):
+func _process(delta: float) -> void:
 	if (_position_animation):
 		var current_position = Vector2(self.transform.origin.x, self.transform.origin.z)
 		var distance = _target_position - current_position
@@ -33,11 +33,11 @@ func _process(delta):
 			self.global_translate(Vector3(movement.x * delta, 0, movement.y * delta))
 
 	if (_rotation_animation):
-		var current_forward = self.global_transform.basis.z
-		var current_side = self.global_transform.basis.x
+		var current_forward := self.global_transform.basis.z
+		var current_side := self.global_transform.basis.x
 
-		var angle_to_target = current_forward.angle_to(_target_direction)
-		var dot_to_target = current_side.dot(_target_direction)
+		var angle_to_target := current_forward.angle_to(_target_direction)
+		var dot_to_target := current_side.dot(_target_direction)
 
 		if angle_to_target > rotation_speed * delta:
 			angle_to_target = rotation_speed * delta
@@ -48,19 +48,19 @@ func _process(delta):
 		self.rotate_y(angle_to_target * sign(dot_to_target))
 
 
-func set_selected():
+func set_selected() -> void:
 	var surface_material = self.get_node("mesh").get_surface_material(0)
 	surface_material.set_shader_param("enable", true)
 	surface_material.next_pass.set_shader_param("enable", true)
 
 
-func set_deselected():
+func set_deselected() -> void:
 	var surface_material = self.get_node("mesh").get_surface_material(0)
 	surface_material.set_shader_param("enable", false)
 	surface_material.next_pass.set_shader_param("enable", false)
 
 
-func end_move_floor_change():
+func end_move_floor_change() -> void:
 	pass
 
 
@@ -83,20 +83,20 @@ remotesync func move_to_NETWORK(position: Vector3, target_floor:int) -> void:
 	self._position_animation = true
 
 
-func rotate_to(target_direction):
+func rotate_to(target_direction: Vector3) -> void:
 	rpc("rotate_to_NETWORK", target_direction)
 
 
-remotesync func rotate_to_NETWORK(target_direction):
+remotesync func rotate_to_NETWORK(target_direction: Vector3) -> void:
 	self._target_direction = target_direction
 	self._rotation_animation = true
 
 
-func delete():
+func delete() -> void:
 	rpc("delete_NETWORK")
 
 
-remotesync func delete_NETWORK():
+remotesync func delete_NETWORK() -> void:
 	var main = get_tree().get_root().get_node("Main")
 	if main.selected_object == self:
 		main.deselect_object()
