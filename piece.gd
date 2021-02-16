@@ -12,7 +12,7 @@ var floor_number: float = 0.0
 var tile_size: int = 1
 
 var _target_position: Vector2 = Vector2(1, 1)
-var _target_rotation: Vector3 = Vector3(0, 0, 0)
+var _target_direction: Vector3 = Vector3(0, 0, 0)
 
 var _position_animation: bool = false
 var _rotation_animation: bool = false
@@ -33,24 +33,19 @@ func _process(delta):
 			self.global_translate(Vector3(movement.x * delta, 0, movement.y * delta))
 
 	if (_rotation_animation):
-		var current_position = self.global_transform.origin
 		var current_forward = self.global_transform.basis.z
 		var current_side = self.global_transform.basis.x
 
-		var target_direction = _target_rotation - current_position
-		var angle_to_target = current_forward.angle_to(target_direction)
-		var dot_to_target = current_side.dot(target_direction)
+		var angle_to_target = current_forward.angle_to(_target_direction)
+		var dot_to_target = current_side.dot(_target_direction)
 
 		if angle_to_target > rotation_speed * delta:
 			angle_to_target = rotation_speed * delta
 		else:
 			_rotation_animation = false
 
-		if dot_to_target < 0.0:
-			angle_to_target *= -1
-
-#		var axis = current_forward.cross(_target_rotation)
-		self.rotate_y(angle_to_target)
+#		var axis = current_forward.cross(_target_direction)
+		self.rotate_y(angle_to_target * sign(dot_to_target))
 
 
 func set_selected():
@@ -93,7 +88,7 @@ func rotate_to(target_direction):
 
 
 remotesync func rotate_to_NETWORK(target_direction):
-	self._target_rotation = target_direction
+	self._target_direction = target_direction
 	self._rotation_animation = true
 
 

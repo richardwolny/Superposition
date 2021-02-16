@@ -53,6 +53,8 @@ func _ready():
 	$PlayerControls/SnapMode.select(Snap.move_mode)
 	_update_manual_snap_options(Snap.manual_options_enabled)
 
+	$PlayerControls/SnapRotate.pressed = Snap.rotate_on
+
 	for i in range(len(get_parent().models)):
 		$CreatePopup/Center/Panel/VBox/HBox/VBox/Model/OptionButton.add_item(get_parent().models[i][0], i)
 
@@ -140,6 +142,10 @@ func _on_Settings_popup_id_pressed(id: int):
 				if Snap.move_mode != Snap.MoveMode.OFF and Snap.move_mode != Snap.MoveMode.AUTO:
 					Snap.move_mode = Snap.MoveMode.AUTO
 					$PlayerControls/SnapMode.select(Snap.MoveMode.AUTO)
+
+
+func _on_SnapRotate_toggled(button_pressed):
+	Snap.rotate_on = button_pressed
 
 
 func _on_CreatePopup_pressed():

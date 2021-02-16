@@ -118,7 +118,9 @@ func _unhandled_input(event):
 #						print("executing LeftClickAction.ROTATE_SELECTED")
 						assert(selected_object != null)
 						if floor_target != null:
-							selected_object.rotate_to(floor_target)
+							var selected_position := selected_object.global_transform.origin
+							var target_direction: Vector3 = floor_target - selected_position
+							selected_object.rotate_to(compute_snap_direction(target_direction))
 							change_left_click_action(LeftClickAction.SELECT)
 					LeftClickAction.PING:
 #						print("executing LeftClickAction.PING")
@@ -192,8 +194,6 @@ func _process(delta):
 		$GameMenu.set_share_room_disabled(should_disable_share_button)
 
 	match left_click_action:
-		LeftClickAction.SELECT:
-			pass
 		LeftClickAction.MOVE_SELECTED:
 			assert(selected_object != null)
 			var mouse_floor_intersection = get_mouse_floor_intersection(get_viewport().get_mouse_position())
@@ -206,8 +206,10 @@ func _process(delta):
 			if mouse_floor_intersection != null:
 				var selected_position = selected_object.global_transform.origin
 				var selected_direction = selected_object.global_transform.basis.z
-				var target_direction = mouse_floor_intersection - selected_position
+				var target_direction: Vector3 = mouse_floor_intersection - selected_position
+				var snap_direction := compute_snap_direction(target_direction)
 
+				selected_position.y = DRAW_HEIGHT
 				var draw_node = get_node("Draw")
 				draw_node.set_material_override(draw_material)
 				draw_node.clear()
@@ -215,17 +217,13 @@ func _process(delta):
 				# Draw small vertical line at intersection
 				draw_node.add_vertex(mouse_floor_intersection)
 				draw_node.add_vertex(mouse_floor_intersection + Vector3(0,1,0))
-				selected_position.y = 0.1
-				mouse_floor_intersection.y = 0.1
-				# Draw line from selected object to intersection
+				# Draw line from selected object towards intersection
 				draw_node.add_vertex(selected_position)
-				draw_node.add_vertex(mouse_floor_intersection)
+				draw_node.add_vertex(selected_position + snap_direction * 3)
 				# Draw facing direction of selected object
 				draw_node.add_vertex(selected_position)
 				draw_node.add_vertex(selected_position + selected_direction * 2)
 				draw_node.end()
-		LeftClickAction.PING:
-			pass
 
 
 func _on_Network_player_connected():
@@ -525,6 +523,20 @@ func draw_snap_position(position: Vector3) -> void:
 			draw_node.add_vertex(position + Vector3(0, DRAW_HEIGHT, -DRAW_WIDTH))
 			draw_node.add_vertex(position + Vector3(0, DRAW_HEIGHT, DRAW_WIDTH))
 	draw_node.end()
+
+
+func compute_snap_direction(direction: Vector3) -> Vector3:
+	direction = direction.normalized()
+	if not Snap.rotate_on:
+		return direction
+
+	var dot := Vector3(1, 0, 0).dot(direction)
+	var angle := direction.angle_to(Vector3(0, 0, 1)) 
+	var snap_angle := stepify(angle, deg2rad(45))  * sign(dot)
+#	print("angle: ", rad2deg(angle), ", snap_angle: ", rad2deg(snap_angle))
+
+	var snap_direction := Vector3(0, 0, 1).rotated(Vector3(0, 1, 0), snap_angle)
+	return snap_direction
 
 
 func select_object(object):

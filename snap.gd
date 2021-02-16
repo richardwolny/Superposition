@@ -12,6 +12,7 @@ enum MoveMode {
 
 var manual_options_enabled: bool = false
 var move_mode: int = MoveMode.AUTO
+var rotate_on: bool = true
 
 
 func cycle_move_mode() -> void:
