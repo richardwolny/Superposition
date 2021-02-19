@@ -14,10 +14,14 @@ signal up_level()
 signal down_level()
 signal popup_toggled(is_showing)
 
+enum SettingId {
+	MANUAL_SNAP_OPTIONS,
+}
+
 enum GeneratorType {
 	CIRCLE,
 	SQUARE,
-	MINI
+	MINI,
 }
 
 var _generator_type = null;
@@ -36,7 +40,21 @@ func _ready():
 	$MapControls.hide()
 	$RoomControls.hide()
 	$CreatePopup.hide()
+
 	$MapControls/MapMenu.get_popup().connect("id_pressed", self, "_on_MapMenu_popup_id_pressed")
+
+	$PlayerControls/Settings.get_popup().add_check_item("Show Manual Snap Options", SettingId.MANUAL_SNAP_OPTIONS)
+	var index: int = $PlayerControls/Settings.get_popup().get_item_index(SettingId.MANUAL_SNAP_OPTIONS)
+	$PlayerControls/Settings.get_popup().set_item_checked(index, Snap.manual_options_enabled)
+	$PlayerControls/Settings.get_popup().connect("id_pressed", self, "_on_Settings_popup_id_pressed")
+
+	for mode in Snap.MoveMode.keys():
+		$PlayerControls/SnapMode.add_item(mode)
+	$PlayerControls/SnapMode.select(Snap.move_mode)
+	_update_manual_snap_options(Snap.manual_options_enabled)
+
+	$PlayerControls/SnapRotate.pressed = Snap.rotate_on
+
 	for i in range(len(get_parent().models)):
 		$CreatePopup/Center/Panel/VBox/HBox/VBox/Model/OptionButton.add_item(get_parent().models[i][0], i)
 
@@ -54,11 +72,16 @@ func set_unhide_tile_disabled(disabled):
 	$RoomControls/UnhideTile.disabled = disabled
 
 
-func set_object_selected(is_selected):
+func set_selected(is_selected):
 	if is_selected:
 		$PlayerControls/Delete.disabled = false
 	else:
 		$PlayerControls/Delete.disabled = true
+
+
+func update_snap_mode():
+	assert(not $PlayerControls/SnapMode.is_item_disabled(Snap.move_mode))
+	$PlayerControls/SnapMode.select(Snap.move_mode)
 
 
 func set_ping_pressed(is_pressed):
@@ -67,6 +90,14 @@ func set_ping_pressed(is_pressed):
 
 func set_current_floor(current_floor):
 	$PlayerControls/Floor.text = "Floor: " + str(current_floor)
+
+
+func _update_manual_snap_options(manual_snap_options_enabled: bool) -> void:
+	var disabled: bool = not manual_snap_options_enabled
+	$PlayerControls/SnapMode.set_item_disabled(Snap.MoveMode.CENTER, disabled)
+	$PlayerControls/SnapMode.set_item_disabled(Snap.MoveMode.CORNER, disabled)
+	$PlayerControls/SnapMode.set_item_disabled(Snap.MoveMode.EDGE_X, disabled)
+	$PlayerControls/SnapMode.set_item_disabled(Snap.MoveMode.EDGE_Z, disabled)
 
 
 func _on_MapMenu_popup_id_pressed(id):
@@ -96,6 +127,25 @@ func _on_ShareRoom_pressed():
 
 func _on_UnhideTile_pressed():
 	emit_signal("unhide_tile")
+
+
+func _on_Settings_popup_id_pressed(id: int):
+	var popup: PopupMenu = $PlayerControls/Settings.get_popup()
+	var index: int = popup.get_item_index(id)
+	match id:
+		SettingId.MANUAL_SNAP_OPTIONS:
+			var is_checked: bool = not popup.is_item_checked(index)
+			popup.set_item_checked(index, is_checked)
+			Snap.manual_options_enabled = is_checked
+			_update_manual_snap_options(is_checked)
+			if not is_checked:
+				if Snap.move_mode != Snap.MoveMode.OFF and Snap.move_mode != Snap.MoveMode.AUTO:
+					Snap.move_mode = Snap.MoveMode.AUTO
+					$PlayerControls/SnapMode.select(Snap.MoveMode.AUTO)
+
+
+func _on_SnapRotate_toggled(button_pressed):
+	Snap.rotate_on = button_pressed
 
 
 func _on_CreatePopup_pressed():
@@ -192,6 +242,10 @@ func _on_Size_LineEdit_text_changed(new_text):
 		_recent_circle_size = new_text
 	elif _generator_type == GeneratorType.SQUARE:
 		_recent_square_size = new_text
+
+
+func _on_SnapMode_item_selected(index):
+	Snap.move_mode = index
 
 
 func _on_Delete_pressed():

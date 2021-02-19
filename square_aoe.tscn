@@ -7,6 +7,7 @@
 viewport_path = NodePath("sprite/viewport")
 
 [sub_resource type="BoxShape" id=2]
+resource_local_to_scene = true
 extents = Vector3( 3, 0.2, 3 )
 
 [node name="square_aoe" type="StaticBody"]
