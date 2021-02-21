@@ -9,7 +9,8 @@ const FLOATMATH_FUZZ: float = 0.00001
 var movement_speed: float = 20.0
 var rotation_speed: float = 8.0
 var floor_number: float = 0.0
-var tile_size: int = 1
+var tile_size_x: int = 1
+var tile_size_z: int = 1
 
 var _target_position: Vector2 = Vector2(1, 1)
 var _target_direction: Vector3 = Vector3(0, 0, 0)
@@ -101,9 +102,9 @@ remotesync func delete_NETWORK() -> void:
 	if main.selected_object == self:
 		main.deselect_object()
 	self.queue_free()
-	if main.circles.has(self.name):
-		main.circles.erase(self.name)
-	if main.squares.has(self.name):
-		main.squares.erase(self.name)
 	if main.minis.has(self.name):
 		main.minis.erase(self.name)
+	if main.circles.has(self.name):
+		main.circles.erase(self.name)
+	if main.rectangles.has(self.name):
+		main.rectangles.erase(self.name)

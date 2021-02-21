@@ -4,9 +4,9 @@ extends Control
 signal map_changed(filename)
 signal share_room()
 signal unhide_tile()
-signal create_circle(name, color, radius)
-signal create_square(name, color, edge_length)
 signal create_mini(name, color, model_index)
+signal create_circle(name, color, radius)
+signal create_rectangle(name, color, x, z)
 signal delete()
 signal toggle_ping(is_enabled)
 signal toggle_walls(show_walls)
@@ -26,18 +26,21 @@ enum GeneratorType {
 enum SpellShape {
 	CIRCLE,
 	SQUARE,
+	RECTANGLE,
 }
 
-var _generator_type = null;
-var _recent_circle_size_a = "5"
-var _recent_square_size_a = "10"
+class RecentData:
+	var color: Color
+	var name: String
+	var size_a: String
+	var size_b: String
 
-onready var _recent_mini_name = $NameGenerator.mini_name()
-onready var _recent_circle_name = $NameGenerator.spell_name()
-onready var _recent_square_name = $NameGenerator.spell_name()
-onready var _recent_mini_color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
-onready var _recent_circle_color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
-onready var _recent_square_color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
+var _generator_type = null;
+
+var _recent_mini := RecentData.new()
+var _recent_circle := RecentData.new()
+var _recent_square := RecentData.new()
+var _recent_rectangle := RecentData.new()
 
 
 func _ready():
@@ -64,6 +67,22 @@ func _ready():
 
 	for shape in SpellShape.keys():
 		$CreatePopup/Center/Panel/VBox/HBox/VBox/Shape/OptionButton.add_item(shape)
+
+	_recent_mini.color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
+	_recent_mini.name = $NameGenerator.mini_name()
+
+	_recent_circle.color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
+	_recent_circle.name = $NameGenerator.spell_name()
+	_recent_circle.size_a = "5"
+
+	_recent_square.color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
+	_recent_square.name = $NameGenerator.spell_name()
+	_recent_square.size_a = "10"
+
+	_recent_rectangle.color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
+	_recent_rectangle.name = $NameGenerator.spell_name()
+	_recent_rectangle.size_a = "20"
+	_recent_rectangle.size_b = "10"
 
 
 func show_dm_controls():
@@ -164,8 +183,8 @@ func _on_CreatePopup_pressed():
 func _on_CreateMini_pressed():
 	emit_signal("popup_toggled", true)
 	_generator_type = GeneratorType.MINI
-	$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_mini_color
-	$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_mini_name
+	$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_mini.color
+	$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_mini.name
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Model.show()
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/Shape.hide()
 	$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA.hide()
@@ -179,75 +198,105 @@ func _on_CreateSpell_pressed():
 	var shape = $CreatePopup/Center/Panel/VBox/HBox/VBox/Shape/OptionButton.selected
 	match shape:
 		SpellShape.CIRCLE:
-			$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_circle_color
-			$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_circle_name
+			$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_circle.color
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_circle.name
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/Model.hide()
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/Shape.show()
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/Label.text = "Radius:"
-			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text = _recent_circle_size_a
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text = _recent_circle.size_a
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA.show()
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB.hide()
 		SpellShape.SQUARE:
-			$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_square_color
-			$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_square_name
+			$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_square.color
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_square.name
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/Model.hide()
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/Shape.show()
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/Label.text = "Edge Length:"
-			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text = _recent_square_size_a
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text = _recent_square.size_a
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA.show()
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB.hide()
+		SpellShape.RECTANGLE:
+			$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_rectangle.color
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_rectangle.name
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/Model.hide()
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/Shape.show()
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/Label.text = "X Length:"
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text = _recent_rectangle.size_a
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA.show()
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB/Label.text = "Y Length:"
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB/LineEdit.text = _recent_rectangle.size_b
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB.show()
 	$CreatePopup.show()
 
 
 func _on_GenerateRandom_pressed():
 	if _generator_type == GeneratorType.MINI:
-		_recent_mini_name = $NameGenerator.mini_name()
-		$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_mini_name
+		_recent_mini.name = $NameGenerator.mini_name()
+		$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_mini.name
 	elif _generator_type == GeneratorType.SPELL:
 		var shape = $CreatePopup/Center/Panel/VBox/HBox/VBox/Shape/OptionButton.selected
 		match shape:
 			SpellShape.CIRCLE:
-				_recent_circle_name = $NameGenerator.spell_name()
-				$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_circle_name
+				_recent_circle.name = $NameGenerator.spell_name()
+				$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_circle.name
 			SpellShape.SQUARE:
-				_recent_square_name = $NameGenerator.spell_name()
-				$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_square_name
+				_recent_square.name = $NameGenerator.spell_name()
+				$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_square.name
+			SpellShape.RECTANGLE:
+				_recent_rectangle.name = $NameGenerator.spell_name()
+				$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_rectangle.name
 
 
 func _on_ColorPicker_color_changed(color):
 	if _generator_type == GeneratorType.MINI:
-		_recent_mini_color = color
+		_recent_mini.color = color
 	elif _generator_type == GeneratorType.SPELL:
 		var shape = $CreatePopup/Center/Panel/VBox/HBox/VBox/Shape/OptionButton.selected
 		match shape:
 			SpellShape.CIRCLE:
-				_recent_circle_color = color
+				_recent_circle.color = color
 			SpellShape.SQUARE:
-				_recent_square_color = color
+				_recent_square.color = color
+			SpellShape.RECTANGLE:
+				_recent_rectangle.color = color
 
 
 func _on_Shape_OptionButton_item_selected(index):
 	match index:
 		SpellShape.CIRCLE:
-			$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_circle_color
-			$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_circle_name
-			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text = _recent_circle_size_a
+			$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_circle.color
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_circle.name
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/Label.text = "Radius:"
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text = _recent_circle.size_a
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB.hide()
 		SpellShape.SQUARE:
-			$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_square_color
-			$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_square_name
-			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text = _recent_square_size_a
+			$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_square.color
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_square.name
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/Label.text = "Edge Length:"
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text = _recent_square.size_a
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB.hide()
+		SpellShape.RECTANGLE:
+			$CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color = _recent_rectangle.color
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit.text = _recent_rectangle.name
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/Label.text = "X Length:"
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text = _recent_rectangle.size_a
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB/Label.text = "Y Length:"
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB/LineEdit.text = _recent_rectangle.size_b
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB.show()
 
 
 func _on_Name_LineEdit_text_changed(new_text):
 	if _generator_type == GeneratorType.MINI:
-		_recent_mini_name = new_text
+		_recent_mini.name = new_text
 	elif _generator_type == GeneratorType.SPELL:
 		var shape = $CreatePopup/Center/Panel/VBox/HBox/VBox/Shape/OptionButton.selected
 		match shape:
 			SpellShape.CIRCLE:
-				_recent_circle_name = new_text
+				_recent_circle.name = new_text
 			SpellShape.SQUARE:
-				_recent_square_name = new_text
+				_recent_square.name = new_text
+			SpellShape.RECTANGLE:
+				_recent_rectangle.name = new_text
 
 
 func _on_SizeA_LineEdit_text_changed(new_text):
@@ -255,13 +304,19 @@ func _on_SizeA_LineEdit_text_changed(new_text):
 		var shape = $CreatePopup/Center/Panel/VBox/HBox/VBox/Shape/OptionButton.selected
 		match shape:
 			SpellShape.CIRCLE:
-				_recent_circle_size_a = new_text
+				_recent_circle.size_a = new_text
 			SpellShape.SQUARE:
-				_recent_square_size_a = new_text
+				_recent_square.size_a = new_text
+			SpellShape.RECTANGLE:
+				_recent_rectangle.size_a = new_text
 
 
 func _on_SizeB_LineEdit_text_changed(new_text):
-	pass
+	if _generator_type == GeneratorType.SPELL:
+		var shape = $CreatePopup/Center/Panel/VBox/HBox/VBox/Shape/OptionButton.selected
+		match shape:
+			SpellShape.RECTANGLE:
+				_recent_rectangle.size_b = new_text
 
 
 func _on_Create_pressed():
@@ -275,11 +330,15 @@ func _on_Create_pressed():
 		var shape = $CreatePopup/Center/Panel/VBox/HBox/VBox/Shape/OptionButton.selected
 		match shape:
 			SpellShape.CIRCLE:
-				var size = $CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text
-				emit_signal("create_circle", name, color, size)
+				var size_a = int($CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text)
+				emit_signal("create_circle", name, color, size_a)
 			SpellShape.SQUARE:
-				var size = $CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text
-				emit_signal("create_square", name, color, size)
+				var size_a = int($CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text)
+				emit_signal("create_rectangle", name, color, size_a, size_a)
+			SpellShape.RECTANGLE:
+				var size_a = int($CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text)
+				var size_b = int($CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB/LineEdit.text)
+				emit_signal("create_rectangle", name, color, size_a, size_b)
 	_generator_type = null
 	$CreatePopup.hide()
 
