@@ -67,7 +67,7 @@ size = 29
 outline_size = 2
 font_data = ExtResource( 1 )
 
-[node name="square" type="Control"]
+[node name="Rectangle" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 __meta__ = {
