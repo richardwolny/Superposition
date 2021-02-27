@@ -34,6 +34,7 @@ var is_popup_showing := false
 var should_draw_walls := true
 
 var minis = {}
+var lines = {}
 var circles = {}
 var rectangles = {}
 
@@ -581,6 +582,8 @@ func redraw_gridmap_tiles():
 func hide_show_floor_objects():
 	for mini in minis:
 		minis[mini].object.hide_show_on_floor()
+	for line in lines:
+		lines[line].object.hide_show_on_floor()
 	for circle in circles:
 		circles[circle].object.hide_show_on_floor()
 	for rectangle in rectangles:
@@ -946,6 +949,18 @@ func resend_objects():
 			mini.object.translation
 		)
 
+	for line_id in lines:
+		var line = lines[line_id]
+		rpc("create_line_NETWORK",
+			line_id,
+			line.color,
+			line.length,
+			line.width,
+			line.name,
+			line.floor_number,
+			line.object.translation
+		)
+
 	for circle_id in circles:
 		var circle = circles[circle_id]
 		rpc("create_circle_NETWORK",
@@ -977,7 +992,7 @@ remotesync func create_mini_NETWORK(id: String, color: Color, style: int, name: 
 
 	var mini = mini_scene.instance()
 	mini.name = id
-	
+
 	 # This will matter for larger units
 	mini.tile_size_x = models[style][1]
 	mini.tile_size_z = models[style][1]
@@ -1012,6 +1027,76 @@ remotesync func create_mini_NETWORK(id: String, color: Color, style: int, name: 
 	}
 
 	redraw_gridmap_tiles()
+
+
+remotesync func create_line_NETWORK(id: String, color: Color, length: int, width: int, name: String, floor_number: int, position: Vector3) -> void:
+	if lines.has(id):
+		print("WARNING: line id already exists!")
+		return
+
+	var rectangle = rectangle_aoe_scene.instance()
+	rectangle.name = id
+	rectangle.tile_size_x = 1
+	rectangle.tile_size_z = 1
+
+	# Note: The tile dimensions are 2 by 2. The length is in units of 1/2 the
+	# tile_size. The rectangle_aoe_scene is normally drawn from the center. The
+	# offset to the edge is half the rectangle, or "all" of length, plus 1 to
+	# move it away from the center of the tile.
+	var z_offset = length + 1
+	var rectangle_sprite = rectangle.get_node("sprite")
+	rectangle_sprite.translation.z = z_offset
+
+	# Set the shader border color
+	var rectangle_material = rectangle.get_node("sprite/viewport/texture/sprite").material
+	rectangle_material.set_shader_param("color", color)
+	rectangle_material.set_shader_param("image_size", length * 200)
+
+	# Set the text colors and names
+	var label1 = rectangle.get_node("sprite/viewport/texture/sprite/label1")
+	label1.set("custom_colors/font_color", color)
+	label1.text = name
+
+	var label2 = rectangle.get_node("sprite/viewport/texture/sprite/label2")
+	label2.set("custom_colors/font_color", color)
+	label2.text = name
+
+	var label3 = rectangle.get_node("sprite/viewport/texture/sprite/label3")
+	label3.set("custom_colors/font_color", color)
+	label3.text = name
+
+	var label4 = rectangle.get_node("sprite/viewport/texture/sprite/label4")
+	label4.set("custom_colors/font_color", color)
+	label4.text = name
+
+	# Set the size
+	var viewport = rectangle.get_node("sprite/viewport")
+	viewport.size.x = width * 200
+	viewport.size.y = length * 200
+
+	# The BoxShape extents are considered "half" extents,
+	# https://docs.godotengine.org/en/stable/classes/class_boxshape.html#class-boxshape
+	var collision_shape = rectangle.get_node("collision_shape")
+	collision_shape.shape.extents.x = width
+	collision_shape.shape.extents.z = length
+	collision_shape.translation.z = z_offset
+
+	self.add_child(rectangle)
+
+	rectangle.translation.x = position.x
+	rectangle.translation.z = position.z
+
+	rectangle.floor_number = floor_number
+	rectangle.hide_show_on_floor()
+
+	lines[id] = {
+		"color": color,
+		"length": length,
+		"width": width,
+		"name": name,
+		"floor_number": floor_number,
+		"object": rectangle
+	}
 
 
 remotesync func create_circle_NETWORK(id: String, color: Color, radius: int, name: String, floor_number: int, position: Vector3) -> void:
@@ -1071,7 +1156,7 @@ remotesync func create_rectangle_NETWORK(id: String, color: Color, x: int, z: in
 	rectangle.name = id
 	rectangle.tile_size_x = x
 	rectangle.tile_size_z = z
-	
+
 	# Set the shader border color
 	var rectangle_material = rectangle.get_node("sprite/viewport/texture/sprite").material
 	rectangle_material.set_shader_param("color", color)
@@ -1098,6 +1183,9 @@ remotesync func create_rectangle_NETWORK(id: String, color: Color, x: int, z: in
 	var viewport = rectangle.get_node("sprite/viewport")
 	viewport.size.x = x * 200
 	viewport.size.y = z * 200
+
+	# The BoxShape extents are considered "half" extents,
+	# https://docs.godotengine.org/en/stable/classes/class_boxshape.html#class-boxshape
 	var collision_shape = rectangle.get_node("collision_shape")
 	collision_shape.shape.extents.x = x
 	collision_shape.shape.extents.z = z
@@ -1179,6 +1267,27 @@ func _on_GameMenu_create_mini(name: String, color: Color, model_index: int) -> v
 		id,
 		color,
 		model_index,
+		name,
+		current_floor,
+		snapped_position
+	)
+
+
+func _on_GameMenu_create_line(name, color, length, width):
+	var id: String = str(get_tree().get_network_unique_id()) + "_" + str(randi())
+
+	var tile_size_x: int = length / 5
+	var tile_size_z: int = width / 5
+
+	var local_snap_mode: int = get_auto_snap_mode(tile_size_x, tile_size_z)
+	var snapped_position: Vector3 = compute_snap_position($camera_origin.translation, local_snap_mode)
+	snapped_position.y = 0
+
+	rpc("create_line_NETWORK",
+		id,
+		color,
+		tile_size_x,
+		tile_size_z,
 		name,
 		current_floor,
 		snapped_position
