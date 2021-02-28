@@ -79,18 +79,18 @@ func _ready():
 		recent_data.name = $NameGenerator.spell_name()
 		_recent_shapes.append(recent_data)
 
-	_recent_shapes[SpellShape.LINE].size_a = "15"
-	_recent_shapes[SpellShape.LINE].size_b = "5"
+	_recent_shapes[SpellShape.LINE].size_a = "30" # Length
+	_recent_shapes[SpellShape.LINE].size_b = "5" # Width
 
-	_recent_shapes[SpellShape.CIRCLE].size_a = "5"
+	_recent_shapes[SpellShape.CIRCLE].size_a = "5" # Radius
 
 	_recent_shapes[SpellShape.CONE].size_a = "15" # Radius
 	_recent_shapes[SpellShape.CONE].size_b = "30" # Arc Degrees
 
-	_recent_shapes[SpellShape.SQUARE].size_a = "10"
+	_recent_shapes[SpellShape.SQUARE].size_a = "10" # Edge Length
 
-	_recent_shapes[SpellShape.RECTANGLE].size_a = "20"
-	_recent_shapes[SpellShape.RECTANGLE].size_b = "10"
+	_recent_shapes[SpellShape.RECTANGLE].size_a = "20" # X Length
+	_recent_shapes[SpellShape.RECTANGLE].size_b = "10" # Z Length
 
 	_recent_mini.color = $CreatePopup/Center/Panel/VBox/HBox/ColorPicker.color
 	_recent_mini.name = $NameGenerator.mini_name()
@@ -213,7 +213,7 @@ func _show_spell_controls(spell_shape: int) -> void:
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/Label.text = "Length:"
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text = _recent_shapes[SpellShape.LINE].size_a
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA.show()
-			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB/Label.text = "Width"
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB/Label.text = "Width:"
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB/LineEdit.text = _recent_shapes[SpellShape.LINE].size_b
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB.show()
 		SpellShape.CIRCLE:
@@ -253,7 +253,7 @@ func _show_spell_controls(spell_shape: int) -> void:
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/Label.text = "X Length:"
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit.text = _recent_shapes[SpellShape.RECTANGLE].size_a
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA.show()
-			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB/Label.text = "Y Length:"
+			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB/Label.text = "Z Length:"
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB/LineEdit.text = _recent_shapes[SpellShape.RECTANGLE].size_b
 			$CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB.show()
 		_:
