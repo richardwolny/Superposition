@@ -967,6 +967,7 @@ func resend_objects():
 			circle_id,
 			circle.color,
 			circle.radius,
+			circle.arc,
 			circle.name,
 			circle.floor_number,
 			circle.object.translation
@@ -1099,7 +1100,7 @@ remotesync func create_line_NETWORK(id: String, color: Color, length: int, width
 	}
 
 
-remotesync func create_circle_NETWORK(id: String, color: Color, radius: int, name: String, floor_number: int, position: Vector3) -> void:
+remotesync func create_circle_NETWORK(id: String, color: Color, radius: int, arc: float, name: String, floor_number: int, position: Vector3) -> void:
 	if circles.has(id):
 		print("WARNING: circle id already exists!")
 		return
@@ -1113,6 +1114,7 @@ remotesync func create_circle_NETWORK(id: String, color: Color, radius: int, nam
 	var circle_material = circle.get_node("sprite/viewport/texture/sprite").material
 	circle_material.set_shader_param("color", color)
 	circle_material.set_shader_param("image_size", radius * 200)
+	circle_material.set_shader_param("arc", arc)
 
 	# Set the text colors and names
 	var label1 = circle.get_node("sprite/viewport/texture/sprite/center/labels/label1")
@@ -1141,6 +1143,7 @@ remotesync func create_circle_NETWORK(id: String, color: Color, radius: int, nam
 	circles[id] = {
 		"color": color,
 		"radius": radius,
+		"arc": arc,
 		"name": name,
 		"floor_number": floor_number,
 		"object": circle
@@ -1294,7 +1297,7 @@ func _on_GameMenu_create_line(name, color, length, width):
 	)
 
 
-func _on_GameMenu_create_circle(name: String, color: Color, radius: int) -> void:
+func _on_GameMenu_create_circle(name: String, color: Color, radius: int, arc_degrees: float) -> void:
 	var id: String = str(get_tree().get_network_unique_id()) + "_" + str(randi())
 
 	var tile_size: int = (radius * 2) / 5
@@ -1307,6 +1310,7 @@ func _on_GameMenu_create_circle(name: String, color: Color, radius: int) -> void
 		id,
 		color,
 		tile_size,
+		arc_degrees / 180 * PI,
 		name,
 		current_floor,
 		snapped_position
