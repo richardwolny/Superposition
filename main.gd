@@ -1282,8 +1282,8 @@ func _on_GameMenu_create_line(name, color, length, width):
 	var tile_size_x: int = length / 5
 	var tile_size_z: int = width / 5
 
-	var local_snap_mode: int = get_auto_snap_mode(tile_size_x, tile_size_z)
-	var snapped_position: Vector3 = compute_snap_position($camera_origin.translation, local_snap_mode)
+	# For line spell shapes, always snap to the center of the tile
+	var snapped_position: Vector3 = compute_snap_position($camera_origin.translation, Snap.MoveMode.CENTER)
 	snapped_position.y = 0
 
 	rpc("create_line_NETWORK",
