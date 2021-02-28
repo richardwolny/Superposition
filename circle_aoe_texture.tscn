@@ -6,9 +6,14 @@
 code = "shader_type canvas_item;
 render_mode blend_mix;
 
+const float PI = 3.14159265358979323846;
+const float PI2 = 6.28318530717958647692;
+
 uniform float image_size;
 uniform float line_size;
 uniform float fade_size;
+uniform float non_arc_line_size;
+uniform float arc: hint_range(0.0, 6.28318530717958647692) = 0.0;
 
 uniform vec4 color : hint_color;
 
@@ -17,19 +22,106 @@ uniform sampler2D noise2;
 
 uniform bool enabled;
 
+// This is ued to represent something that is outside of the range of what
+// should be rendered.
+const float FAR_DISTANCE = -1.0;
+
+float distance_between_points(vec2 a, vec2 b){
+	return sqrt(pow((b.x-a.x),2) + pow((b.y-a.y), 2));
+}
+
+float distance_to_line(vec2 start, vec2 end, vec2 point) {
+	float numerator = abs((end.x-start.x)*(start.y - point.y) - (start.x - point.x)*(end.y - start.y));
+	float denominator = sqrt(pow((end.x-start.x),2) + pow((end.y-start.y), 2));
+
+	return numerator/denominator;
+}
+
+float distance_to_line_segment(vec2 start, vec2 end, vec2 point) {
+	vec2 ab = vec2(end.x - start.x, end.y - start.y);
+	vec2 be = vec2(point.x - end.x, point.y - end.y);
+	vec2 ae = vec2(point.x - start.x, point.y - start.y);
+
+	float AB_BE = dot(ab,be);
+	float AB_AE = dot(ab,ae);
+
+	// Closer to end point
+	if (AB_BE > 0.0) {
+		return distance_between_points(end, point);
+	}
+
+	// Closer to start point
+	else if (AB_AE > 0.0) {
+		return distance_between_points(start, point);
+	}
+	else {
+		float x1 = ab.x;
+        float y1 = ab.y;
+        float x2 = ae.x;
+        float y2 = ae.y;
+        float demonimator = sqrt(x1 * x1 + y1 * y1);
+        return abs(x1 * y2 - y1 * x2) / demonimator;
+	}
+	return 1.0;
+}
+
 void fragment(){
-	
-	//float distance_to_edge = min((0.5-abs(UV.x-0.5)),(0.5-abs(UV.y-0.5)));
-	float distance_to_edge = 0.5-sqrt(pow((UV.x-0.5),2) + pow((UV.y-0.5), 2));
-	
+	float distance_from_center = distance_between_points(UV, vec2(0.5,0.5));
+	float distance_to_circle_edge = 0.5-distance_from_center;
+	float distance_to_edge = distance_to_circle_edge;
+	bool arc_clip = false;
+	// Trim points outside of the arc if the arc value is present
+	if (arc > 0.0) {
+		float halfarc = arc / 2.0;
+
+		float distance_to_center_arc_line = distance_to_line_segment(
+			vec2(0.5,0.5),
+			vec2(0.5 - 0.5 * sin(PI2-halfarc),0.5+ 0.5 * cos(PI2-halfarc)),
+			UV
+		);
+		float distance_to_arm_arc_line = distance_to_line_segment(
+			vec2(0.5, 0.5),
+			vec2(0.5 - 0.5 * sin(halfarc),0.5+ 0.5 * cos(halfarc)),
+			UV
+		);
+		float distance_to_arc_line = min(distance_to_center_arc_line, distance_to_arm_arc_line);
+		distance_to_edge = min(distance_to_edge, distance_to_arc_line);
+
+		float theta = atan(1.0-UV.x-0.5, UV.y-0.5) + PI; //SOE CAH TOA
+		if (theta > halfarc && theta < PI2-halfarc) {
+			arc_clip = true;
+		}
+	}
+
 	float pixels_to_edge = distance_to_edge*image_size;
 	
 	float value = 0.0;
-	if (pixels_to_edge < line_size && pixels_to_edge > 0.0) {
-		value = 1.0;
+
+	if (arc_clip) {
+		float pixels_to_circle_edge = distance_to_circle_edge*image_size;
+		if (
+			pixels_to_circle_edge < non_arc_line_size// Cutoff pixels that are inside the circle past the line size
+		    && pixels_to_circle_edge > 0.0 // Cutoff pixels that are outside the cirlce
+		){
+			value = 1.0;
+		}
 	}
-	if (pixels_to_edge >= line_size && pixels_to_edge < line_size+fade_size){
-		value = (1.0 - (pixels_to_edge-line_size)/fade_size)*.6;
+	else {
+		// Draw the solid outline
+		if (
+			pixels_to_edge < line_size // Cutoff pixels that are inside the circle past the line size
+		    && pixels_to_edge > 0.0 // Cutoff pixels that are outside the cirlce
+		){
+			value = 1.0;
+		}
+
+		// Draw the inner gradient
+		if (
+			pixels_to_edge >= line_size
+			&& pixels_to_edge < line_size+fade_size
+		){
+			value = (1.0 - (pixels_to_edge-line_size)/fade_size)*.6;
+		}
 	}
 	
 	vec3 col = color.rgb;
@@ -59,6 +151,8 @@ shader = SubResource( 1 )
 shader_param/image_size = 600
 shader_param/line_size = 5.0
 shader_param/fade_size = 50.0
+shader_param/non_arc_line_size = 1.0
+shader_param/arc = 0.0
 shader_param/color = Color( 0.882353, 0.0235294, 0.0235294, 1 )
 shader_param/enabled = false
 shader_param/noise1 = SubResource( 3 )
