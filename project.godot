@@ -8,21 +8,27 @@
 
 config_version=4
 
-_global_script_classes=[  ]
+_global_script_classes=[ {
+"base": "StaticBody",
+"class": "Piece",
+"language": "GDScript",
+"path": "res://piece.gd"
+} ]
 _global_script_class_icons={
-
+"Piece": ""
 }
 
 [application]
 
 config/name="Superposition"
-run/main_scene="res://root.tscn"
+run/main_scene="res://main.tscn"
 config/icon="res://icon.png"
 
 [autoload]
 
 Version="*res://version.gd"
 Network="*res://network.gd"
+Snap="*res://snap.gd"
 
 [input]
 

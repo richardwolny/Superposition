@@ -74,35 +74,50 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="CreateCircle" type="Button" parent="PlayerControls"]
-margin_right = 110.0
+[node name="Settings" type="MenuButton" parent="PlayerControls"]
+margin_right = 63.0
 margin_bottom = 40.0
-focus_mode = 0
-size_flags_horizontal = 3
-enabled_focus_mode = 0
-text = "Add Circle"
+text = "Settings"
+flat = false
 
-[node name="CreateSquare" type="Button" parent="PlayerControls"]
-margin_left = 114.0
-margin_right = 224.0
+[node name="SnapMode" type="OptionButton" parent="PlayerControls"]
+margin_left = 67.0
+margin_right = 147.0
+margin_bottom = 40.0
+rect_min_size = Vector2( 80, 0 )
+focus_mode = 0
+enabled_focus_mode = 0
+
+[node name="SnapRotate" type="Button" parent="PlayerControls"]
+margin_left = 151.0
+margin_right = 205.0
 margin_bottom = 40.0
 focus_mode = 0
-size_flags_horizontal = 3
+toggle_mode = true
 enabled_focus_mode = 0
-text = "Add Square"
+text = "R Snap"
 
 [node name="CreateMini" type="Button" parent="PlayerControls"]
-margin_left = 228.0
-margin_right = 338.0
+margin_left = 209.0
+margin_right = 307.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
 enabled_focus_mode = 0
-text = "Add Mini"
+text = "Create Mini"
+
+[node name="CreateSpell" type="Button" parent="PlayerControls"]
+margin_left = 311.0
+margin_right = 409.0
+margin_bottom = 40.0
+focus_mode = 0
+size_flags_horizontal = 3
+enabled_focus_mode = 0
+text = "Create Spell"
 
 [node name="Delete" type="Button" parent="PlayerControls"]
-margin_left = 342.0
-margin_right = 452.0
+margin_left = 413.0
+margin_right = 512.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
@@ -111,8 +126,8 @@ enabled_focus_mode = 0
 text = "Delete"
 
 [node name="Ping" type="Button" parent="PlayerControls"]
-margin_left = 456.0
-margin_right = 567.0
+margin_left = 516.0
+margin_right = 614.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
@@ -121,8 +136,8 @@ enabled_focus_mode = 0
 text = "Ping"
 
 [node name="Walls" type="Button" parent="PlayerControls"]
-margin_left = 571.0
-margin_right = 681.0
+margin_left = 618.0
+margin_right = 716.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
@@ -132,8 +147,8 @@ enabled_focus_mode = 0
 text = "Walls"
 
 [node name="UpLevel" type="Button" parent="PlayerControls"]
-margin_left = 685.0
-margin_right = 795.0
+margin_left = 720.0
+margin_right = 819.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
@@ -141,8 +156,8 @@ enabled_focus_mode = 0
 text = "Upstairs"
 
 [node name="DownLevel" type="Button" parent="PlayerControls"]
-margin_left = 799.0
-margin_right = 909.0
+margin_left = 823.0
+margin_right = 921.0
 margin_bottom = 40.0
 focus_mode = 0
 size_flags_horizontal = 3
@@ -150,7 +165,7 @@ enabled_focus_mode = 0
 text = "Downstairs"
 
 [node name="Floor" type="Label" parent="PlayerControls"]
-margin_left = 913.0
+margin_left = 925.0
 margin_top = 13.0
 margin_right = 1024.0
 margin_bottom = 27.0
@@ -261,28 +276,10 @@ margin_right = 200.0
 margin_bottom = 66.0
 text = "Generate Random"
 
-[node name="Size" type="VBoxContainer" parent="CreatePopup/Center/Panel/VBox/HBox/VBox"]
+[node name="Model" type="VBoxContainer" parent="CreatePopup/Center/Panel/VBox/HBox/VBox"]
 margin_top = 116.0
 margin_right = 200.0
-margin_bottom = 158.0
-
-[node name="Label" type="Label" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/Size"]
-margin_right = 200.0
-margin_bottom = 14.0
-text = "Size:"
-
-[node name="LineEdit" type="LineEdit" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/Size"]
-margin_top = 18.0
-margin_right = 200.0
-margin_bottom = 42.0
-focus_mode = 1
-text = "10"
-caret_blink = true
-
-[node name="Model" type="VBoxContainer" parent="CreatePopup/Center/Panel/VBox/HBox/VBox"]
-margin_top = 208.0
-margin_right = 200.0
-margin_bottom = 246.0
+margin_bottom = 154.0
 
 [node name="Label" type="Label" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/Model"]
 margin_right = 200.0
@@ -295,6 +292,55 @@ margin_right = 200.0
 margin_bottom = 38.0
 focus_mode = 0
 enabled_focus_mode = 0
+
+[node name="Shape" type="VBoxContainer" parent="CreatePopup/Center/Panel/VBox/HBox/VBox"]
+margin_top = 204.0
+margin_right = 200.0
+margin_bottom = 242.0
+
+[node name="Label" type="Label" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/Shape"]
+margin_right = 200.0
+margin_bottom = 14.0
+text = "Shape:"
+
+[node name="OptionButton" type="OptionButton" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/Shape"]
+margin_top = 18.0
+margin_right = 200.0
+margin_bottom = 38.0
+
+[node name="SizeA" type="VBoxContainer" parent="CreatePopup/Center/Panel/VBox/HBox/VBox"]
+margin_top = 292.0
+margin_right = 200.0
+margin_bottom = 334.0
+
+[node name="Label" type="Label" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA"]
+margin_right = 200.0
+margin_bottom = 14.0
+text = "Size A:"
+
+[node name="LineEdit" type="LineEdit" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA"]
+margin_top = 18.0
+margin_right = 200.0
+margin_bottom = 42.0
+focus_mode = 1
+text = "10"
+caret_blink = true
+
+[node name="SizeB" type="VBoxContainer" parent="CreatePopup/Center/Panel/VBox/HBox/VBox"]
+margin_top = 384.0
+margin_right = 200.0
+margin_bottom = 426.0
+
+[node name="Label" type="Label" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB"]
+margin_right = 200.0
+margin_bottom = 14.0
+text = "Size B:"
+
+[node name="LineEdit" type="LineEdit" parent="CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB"]
+margin_top = 18.0
+margin_right = 200.0
+margin_bottom = 42.0
+text = "10"
 
 [node name="Create" type="Button" parent="CreatePopup/Center/Panel/VBox"]
 margin_top = 440.0
@@ -310,9 +356,10 @@ script = ExtResource( 2 )
 [connection signal="pressed" from="MapControls/LoadMap" to="." method="_on_LoadMap_pressed"]
 [connection signal="pressed" from="RoomControls/ShareRoom" to="." method="_on_ShareRoom_pressed"]
 [connection signal="pressed" from="RoomControls/UnhideTile" to="." method="_on_UnhideTile_pressed"]
-[connection signal="pressed" from="PlayerControls/CreateCircle" to="." method="_on_CreateCircle_pressed"]
-[connection signal="pressed" from="PlayerControls/CreateSquare" to="." method="_on_CreateSquare_pressed"]
+[connection signal="item_selected" from="PlayerControls/SnapMode" to="." method="_on_SnapMode_item_selected"]
+[connection signal="toggled" from="PlayerControls/SnapRotate" to="." method="_on_SnapRotate_toggled"]
 [connection signal="pressed" from="PlayerControls/CreateMini" to="." method="_on_CreateMini_pressed"]
+[connection signal="pressed" from="PlayerControls/CreateSpell" to="." method="_on_CreateSpell_pressed"]
 [connection signal="pressed" from="PlayerControls/Delete" to="." method="_on_Delete_pressed"]
 [connection signal="toggled" from="PlayerControls/Ping" to="." method="_on_Ping_toggled"]
 [connection signal="toggled" from="PlayerControls/Walls" to="." method="_on_Walls_toggled"]
@@ -324,5 +371,7 @@ script = ExtResource( 2 )
 [connection signal="color_changed" from="CreatePopup/Center/Panel/VBox/HBox/ColorPicker" to="." method="_on_ColorPicker_color_changed"]
 [connection signal="text_changed" from="CreatePopup/Center/Panel/VBox/HBox/VBox/Name/LineEdit" to="." method="_on_Name_LineEdit_text_changed"]
 [connection signal="pressed" from="CreatePopup/Center/Panel/VBox/HBox/VBox/Name/GenerateRandom" to="." method="_on_GenerateRandom_pressed"]
-[connection signal="text_changed" from="CreatePopup/Center/Panel/VBox/HBox/VBox/Size/LineEdit" to="." method="_on_Size_LineEdit_text_changed"]
+[connection signal="item_selected" from="CreatePopup/Center/Panel/VBox/HBox/VBox/Shape/OptionButton" to="." method="_on_Shape_OptionButton_item_selected"]
+[connection signal="text_changed" from="CreatePopup/Center/Panel/VBox/HBox/VBox/SizeA/LineEdit" to="." method="_on_SizeA_LineEdit_text_changed"]
+[connection signal="text_changed" from="CreatePopup/Center/Panel/VBox/HBox/VBox/SizeB/LineEdit" to="." method="_on_SizeB_LineEdit_text_changed"]
 [connection signal="pressed" from="CreatePopup/Center/Panel/VBox/Create" to="." method="_on_Create_pressed"]
