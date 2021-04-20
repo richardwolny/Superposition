@@ -45,6 +45,8 @@ var models = [
 	["Monster", 1, 270, 2.4, "monster.tres"],
 	["Big Monster", 2, 270, 3.2, "bigmonster.tres"],
 	["Avallach", 1, 270, 2.6, "avallach.tres"],
+	["Maerilith", 1, 270, 2.6, "maerilith.tres"],
+	["Ignar", 1, 270, 2.6, "ignar.tres"],
 	["Lelyvia", 1, 270, 2.6, "lelyvia.tres"],
 ]
 
