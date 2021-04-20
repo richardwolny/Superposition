@@ -1,7 +1,8 @@
-[gd_resource type="MeshLibrary" load_steps=32 format=2]
+[gd_resource type="MeshLibrary" load_steps=33 format=2]
 
 [ext_resource path="res://structure_material.tres" type="Material" id=1]
 [ext_resource path="res://structure_material_glow.tres" type="Material" id=2]
+[ext_resource path="res://gridmap_meshes/door-cross.tres" type="ArrayMesh" id=3]
 
 [sub_resource type="ArrayMesh" id=1]
 resource_name = "Cube"
@@ -367,3 +368,8 @@ item/10/mesh = SubResource( 7 )
 item/10/mesh_transform = null
 item/10/shapes = [  ]
 item/10/navmesh_transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+item/11/name = "door-cross"
+item/11/mesh = ExtResource( 3 )
+item/11/mesh_transform = null
+item/11/shapes = [  ]
+item/11/navmesh_transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
