@@ -66,40 +66,46 @@ func end_move_floor_change() -> void:
 
 
 func hide_show_on_floor():
-	var main = get_tree().get_root().get_node("Main")
+	print("hide_show_on_floor")
+	var main = get_node("/root/Main")
 	if main.current_floor+0.9 > self.floor_number && main.current_floor - 0.9 < self.floor_number:
 		self.transform.origin.y = (self.floor_number - main.current_floor)*2
 	else:
 		self.transform.origin.y = 99999999
 
 
-func move_to(position: Vector3, target_floor: int) -> void:
-	rpc("move_to_NETWORK", position, target_floor)
+func set_location_local(position: Vector3, target_floor: int) -> void:
+	self.global_transform.origin = position
+	self.floor_number = float(target_floor)
 
 
-remotesync func move_to_NETWORK(position: Vector3, target_floor:int) -> void:
+func move_to_remote(position: Vector3, target_floor: int) -> void:
+	rpc("_move_to_remote_NETWORK", position, target_floor)
+
+
+remote func _move_to_remote_NETWORK(position: Vector3, target_floor: int) -> void:
 	self._target_position = Vector2(position.x, position.z)
-	self.floor_number = target_floor
+	self.floor_number = float(target_floor)
 	hide_show_on_floor()
 	self._position_animation = true
 
 
 func rotate_to(target_direction: Vector3) -> void:
-	rpc("rotate_to_NETWORK", target_direction)
+	rpc("_rotate_to_NETWORK", target_direction)
 
 
-remotesync func rotate_to_NETWORK(target_direction: Vector3) -> void:
+remotesync func _rotate_to_NETWORK(target_direction: Vector3) -> void:
 	self._target_direction = target_direction
 	self._rotation_animation = true
 
 
 func delete() -> void:
-	rpc("delete_NETWORK")
+	rpc("_delete_NETWORK")
 
 
-remotesync func delete_NETWORK() -> void:
-	var main = get_tree().get_root().get_node("Main")
-	if main.selected_object == self:
+remotesync func _delete_NETWORK() -> void:
+	var main = get_node("/root/Main")
+	if main.selected_piece == self:
 		main.deselect_object()
 	self.queue_free()
 	if main.minis.has(self.name):
