@@ -29,8 +29,7 @@ const DRAW_WIDTH: float = 0.5
 var right_mouse_button_pressed: bool = false
 var left_click_action: int = LeftClickAction.SELECT
 var selected_piece: Piece = null
-var selected_start_position: Vector3
-var return_selected_to_start_position: bool = false
+var return_selected_to_saved_position: bool = false
 var draw_material: SpatialMaterial = SpatialMaterial.new()
 
 var is_popup_showing := false
@@ -119,7 +118,7 @@ func _unhandled_input(event):
 							var local_snap_mode: int = get_snap_mode_if_auto()
 							var snapped_position: Vector3 = compute_snap_position(floor_target, local_snap_mode)
 							selected_piece.move_to_remote(snapped_position, current_floor)
-							return_selected_to_start_position = false
+							return_selected_to_saved_position = false
 							change_left_click_action(LeftClickAction.SELECT)
 							redraw_gridmap_tiles()
 					LeftClickAction.ROTATE_SELECTED:
@@ -210,8 +209,8 @@ func _process(delta):
 				var snapped_position: Vector3 = compute_snap_position(mouse_floor_intersection, local_snap_mode)
 				selected_piece.set_location_local(snapped_position, current_floor)
 			else:
-				selected_piece.set_location_local(selected_start_position, current_floor)
-			draw_snap_position(selected_start_position, local_snap_mode)
+				selected_piece.return_to_saved_position()
+			draw_snap_position(selected_piece.saved_position, local_snap_mode)
 		LeftClickAction.ROTATE_SELECTED:
 			assert(selected_piece != null)
 			var mouse_floor_intersection = get_mouse_floor_intersection(get_viewport().get_mouse_position())
@@ -248,8 +247,8 @@ func change_left_click_action(new_action: int) -> void:
 #			print("exiting LeftClickAction.SELECT")
 		LeftClickAction.MOVE_SELECTED:
 #			print("exiting LeftClickAction.MOVE_SELECTED")
-			if return_selected_to_start_position:
-				selected_piece.global_transform.origin = selected_start_position
+			if return_selected_to_saved_position:
+				selected_piece.return_to_saved_position()
 			var draw_node = get_node("Draw")
 			draw_node.set_material_override(draw_material)
 			draw_node.clear()
@@ -277,8 +276,8 @@ func change_left_click_action(new_action: int) -> void:
 #			print("entering LeftClickAction.SELECT")
 		LeftClickAction.MOVE_SELECTED:
 #			print("entering LeftClickAction.MOVE_SELECTED")
-			selected_start_position = selected_piece.global_transform.origin
-			return_selected_to_start_position = true
+			selected_piece.save_current_position()
+			return_selected_to_saved_position = true
 #		LeftClickAction.ROTATE_SELECTED:
 #			print("entering LeftClickAction.ROTATE_SELECTED")
 #		LeftClickAction.PING:
