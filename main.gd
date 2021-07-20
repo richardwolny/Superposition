@@ -439,14 +439,14 @@ func get_mouse_floor_intersection(screen_position, height = 0):
 	return null
 
 
-func get_tile_at_position(position: Vector3):
+func get_tile_at_location(position: Vector3, target_floor: int):
 	var tile_x := floor(position.x / 2.0)
 	var tile_y := floor(position.z / 2.0)
-	return sparse_map_lookup(shared_sparse_map, tile_x, tile_y, current_floor)
+	return sparse_map_lookup(shared_sparse_map, tile_x, tile_y, target_floor)
 
 
-func get_height_multiplier_at_position(position: Vector3) -> float:
-	var tile = get_tile_at_position(position)
+func get_height_multiplier_at_location(position: Vector3, target_floor: int) -> float:
+	var tile = get_tile_at_location(position, target_floor)
 	if tile != null:
 		if tile.tile_type == "stairsup":
 			return 1.0

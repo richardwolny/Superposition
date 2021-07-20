@@ -66,7 +66,6 @@ func end_move_floor_change() -> void:
 
 
 func hide_show_on_floor():
-	print("hide_show_on_floor")
 	var main = get_node("/root/Main")
 	if main.current_floor+0.9 > self.floor_number && main.current_floor - 0.9 < self.floor_number:
 		self.transform.origin.y = (self.floor_number - main.current_floor)*2

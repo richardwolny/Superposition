@@ -16,17 +16,17 @@ func set_deselected() -> void:
 
 func set_location_local(position: Vector3, target_floor: int) -> void:
 	var main = get_node("/root/Main")
-	var height_multiplier: float = main.get_height_multiplier_at_position(position)
+	var height_multiplier: float = main.get_height_multiplier_at_location(position, target_floor)
 	position.y = height_multiplier * 1.0
 	self.global_transform.origin = position
-	self.floor_number = target_floor + height_multiplier * 0.5
+	self.floor_number = target_floor + height_multiplier * 0.4
 
 
 func end_move_floor_change() -> void:
-	print("end_move_floor_change")
 	var main = get_node("/root/Main")
-	var height_multiplier: float = main.get_height_multiplier_at_position(self.global_transform.origin)
-	self.floor_number = self.floor_number + height_multiplier * 0.5
+	var current_floor: int = round(self.floor_number)
+	var height_multiplier: float = main.get_height_multiplier_at_location(self.global_transform.origin, current_floor)
+	self.floor_number = self.floor_number + height_multiplier * 0.4
 
 	# Redraw rooms so that we can see new fog of war areas
 	main.redraw_gridmap_tiles()
