@@ -121,6 +121,10 @@ func update_snap_mode():
 	$PlayerControls/SnapMode.select(Snap.move_mode)
 
 
+func update_snap_rotate():
+	$PlayerControls/SnapRotate.pressed = Snap.rotate_on
+
+
 func set_ping_pressed(is_pressed):
 	$PlayerControls/Ping.pressed = is_pressed
 

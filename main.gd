@@ -87,8 +87,13 @@ func _unhandled_input(event):
 			elif event.scancode == KEY_SPACE:
 				cycle_movement_action()
 			elif event.scancode == KEY_TAB:
-				Snap.cycle_move_mode()
-				$GameMenu.update_snap_mode()
+				match left_click_action:
+					LeftClickAction.MOVE_SELECTED:
+						Snap.cycle_move_mode()
+						$GameMenu.update_snap_mode()
+					LeftClickAction.ROTATE_SELECTED:
+						Snap.rotate_on = not Snap.rotate_on
+						$GameMenu.update_snap_rotate()
 	if event is InputEventMouseButton:
 		if event.pressed:
 			if event.button_index == BUTTON_WHEEL_UP:
