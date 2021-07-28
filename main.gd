@@ -32,6 +32,7 @@ var right_mouse_button_pressed: bool = false
 var left_click_action: int = LeftClickAction.SELECT
 var selected_piece: Piece = null
 var return_selected_to_saved_position: bool = false
+var selected_piece_offset: Vector3
 var draw_material: SpatialMaterial = SpatialMaterial.new()
 
 var is_popup_showing := false
@@ -83,11 +84,16 @@ func _unhandled_input(event):
 		if event.pressed and not event.echo:
 			if event.scancode == KEY_ESCAPE:
 				change_left_click_action(LeftClickAction.SELECT)
-			if event.scancode == KEY_SPACE:
+			elif event.scancode == KEY_SPACE:
 				cycle_movement_action()
-			if event.scancode == KEY_TAB:
-				Snap.cycle_move_mode()
-				$GameMenu.update_snap_mode()
+			elif event.scancode == KEY_TAB:
+				match left_click_action:
+					LeftClickAction.MOVE_SELECTED:
+						Snap.cycle_move_mode()
+						$GameMenu.update_snap_mode()
+					LeftClickAction.ROTATE_SELECTED:
+						Snap.rotate_on = not Snap.rotate_on
+						$GameMenu.update_snap_rotate()
 	if event is InputEventMouseButton:
 		if event.pressed:
 			if event.button_index == BUTTON_WHEEL_UP:
@@ -100,7 +106,7 @@ func _unhandled_input(event):
 				right_mouse_button_pressed = true
 				Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 			elif event.button_index == BUTTON_LEFT:
-				var floor_target = get_mouse_floor_intersection(event.position)
+				var mouse_floor_intersection = get_mouse_floor_intersection(event.position)
 				match left_click_action:
 					LeftClickAction.SELECT:
 #						print("executing LeftClickAction.SELECT")
@@ -113,12 +119,13 @@ func _unhandled_input(event):
 							if result.collider.has_method("set_selected"):
 								select_piece(result.collider)
 								change_left_click_action(LeftClickAction.MOVE_SELECTED)
+								selected_piece_offset = selected_piece.global_transform.origin - mouse_floor_intersection
 					LeftClickAction.MOVE_SELECTED:
 #						print("executing LeftClickAction.MOVE_SELECTED")
 						assert(selected_piece != null)
-						if floor_target != null:
+						if mouse_floor_intersection != null:
 							var local_snap_mode: int = get_snap_mode_if_auto()
-							var snapped_position: Vector3 = compute_snap_position(floor_target, local_snap_mode)
+							var snapped_position: Vector3 = compute_snap_position(mouse_floor_intersection + selected_piece_offset, local_snap_mode)
 							selected_piece.move_to_remote(snapped_position, current_floor)
 							return_selected_to_saved_position = false
 							change_left_click_action(LeftClickAction.SELECT)
@@ -126,17 +133,16 @@ func _unhandled_input(event):
 					LeftClickAction.ROTATE_SELECTED:
 #						print("executing LeftClickAction.ROTATE_SELECTED")
 						assert(selected_piece != null)
-						if floor_target != null:
+						if mouse_floor_intersection != null:
 							var selected_position := selected_piece.global_transform.origin
-							var target_direction: Vector3 = floor_target - selected_position
+							var target_direction: Vector3 = mouse_floor_intersection - selected_position
 							selected_piece.rotate_to(compute_snap_direction(target_direction))
 							change_left_click_action(LeftClickAction.SELECT)
 					LeftClickAction.PING:
 #						print("executing LeftClickAction.PING")
-						rpc("ping_NETWORK", floor_target)
+						rpc("ping_NETWORK", mouse_floor_intersection)
 					_:
 						print("tried to execute invalid LeftClickAction")
-						assert(true)
 		else:
 			if event.button_index == BUTTON_RIGHT:
 				right_mouse_button_pressed = false
@@ -208,7 +214,7 @@ func _process(delta):
 			var local_snap_mode: int = get_snap_mode_if_auto()
 			var mouse_floor_intersection = get_mouse_floor_intersection(get_viewport().get_mouse_position())
 			if mouse_floor_intersection != null:
-				var snapped_position: Vector3 = compute_snap_position(mouse_floor_intersection, local_snap_mode)
+				var snapped_position: Vector3 = compute_snap_position(mouse_floor_intersection + selected_piece_offset, local_snap_mode)
 				selected_piece.set_location_local(snapped_position, current_floor)
 			else:
 				selected_piece.return_to_saved_position()
