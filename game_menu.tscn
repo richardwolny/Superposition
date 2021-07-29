@@ -24,7 +24,7 @@ margin_right = 82.0
 margin_bottom = 40.0
 text = "Select Map"
 flat = false
-items = [ "res://map_test.txt", null, 0, false, false, 0, 0, null, "", false, "res://map_mines.txt", null, 0, false, false, 1, 0, null, "", false, "res://map_plane.txt", null, 0, false, false, 2, 0, null, "", false ]
+items = [ "res://maps/test.txt", null, 0, false, false, 0, 0, null, "", false, "res://maps/mines.txt", null, 0, false, false, 1, 0, null, "", false, "res://maps/plane.txt", null, 0, false, false, 2, 0, null, "", false ]
 
 [node name="LoadMap" type="Button" parent="MapControls"]
 margin_left = 86.0
@@ -353,6 +353,7 @@ text = "Create"
 
 [node name="NameGenerator" type="Node" parent="."]
 script = ExtResource( 2 )
+
 [connection signal="pressed" from="MapControls/LoadMap" to="." method="_on_LoadMap_pressed"]
 [connection signal="pressed" from="RoomControls/ShareRoom" to="." method="_on_ShareRoom_pressed"]
 [connection signal="pressed" from="RoomControls/UnhideTile" to="." method="_on_UnhideTile_pressed"]
