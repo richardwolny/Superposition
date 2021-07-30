@@ -4,7 +4,7 @@ extends Node
 signal player_connected()
 
 const DEFAULT_PORT = 31400
-const IS_SSL_ENABLED = false
+const IS_SSL_ENABLED = true
 
 var _peer
 var _players = {}
