@@ -1,3 +1,4 @@
+class_name Main
 extends Spatial
 
 
@@ -16,18 +17,22 @@ const speed: float = 10.0
 const tile_types = {
 	"floor": 0,
 	"door": 1,
+	"door-diag": 10,
+	"door-cross": 11,
 	"hiddendoor": 1,
 	"stairsup": 7,
 	"stairsdown": 6,
 	"start": 8,
 }
 const ignored_characters = ["A", " "]
-const DRAW_HEIGHT: float = 0.1
-const DRAW_WIDTH: float = 0.5
+const DRAW_HEIGHT: float = 0.05
+const DRAW_WIDTH: float = 0.4
 
 var right_mouse_button_pressed: bool = false
 var left_click_action: int = LeftClickAction.SELECT
-var selected_object: Piece = null
+var selected_piece: Piece = null
+var return_selected_to_saved_position: bool = false
+var selected_piece_offset: Vector3
 var draw_material: SpatialMaterial = SpatialMaterial.new()
 
 var is_popup_showing := false
@@ -65,6 +70,7 @@ const mini_scene = preload("res://mini.tscn")
 const circle_aoe_scene = preload("res://circle_aoe.tscn")
 const rectangle_aoe_scene = preload("res://rectangle_aoe.tscn")
 
+
 func _ready():
 	if Network.connect('player_connected', self, '_on_Network_player_connected') != OK:
 		print("Failed to connect \"player_connected\"")
@@ -80,11 +86,11 @@ func _unhandled_input(event):
 		if event.pressed and not event.echo:
 			if event.scancode == KEY_ESCAPE:
 				change_left_click_action(LeftClickAction.SELECT)
-			if event.scancode == KEY_SPACE:
+			elif event.scancode == KEY_SPACE:
 				cycle_movement_action()
-			if event.scancode == KEY_TAB:
-				Snap.cycle_move_mode()
-				$GameMenu.update_snap_mode()
+			elif event.scancode == KEY_TAB:
+				Snap.enabled = not Snap.enabled
+				$GameMenu.update_snap_enabled()
 	if event is InputEventMouseButton:
 		if event.pressed:
 			if event.button_index == BUTTON_WHEEL_UP:
@@ -97,7 +103,7 @@ func _unhandled_input(event):
 				right_mouse_button_pressed = true
 				Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 			elif event.button_index == BUTTON_LEFT:
-				var floor_target = get_mouse_floor_intersection(event.position)
+				var mouse_floor_intersection = get_mouse_floor_intersection(event.position)
 				match left_click_action:
 					LeftClickAction.SELECT:
 #						print("executing LeftClickAction.SELECT")
@@ -108,30 +114,31 @@ func _unhandled_input(event):
 						var result = space_state.intersect_ray(start_coordinate, end_coordinate)
 						if result:
 							if result.collider.has_method("set_selected"):
-								select_object(result.collider)
+								select_piece(result.collider)
 								change_left_click_action(LeftClickAction.MOVE_SELECTED)
+								selected_piece_offset = selected_piece.global_transform.origin - mouse_floor_intersection
 					LeftClickAction.MOVE_SELECTED:
 #						print("executing LeftClickAction.MOVE_SELECTED")
-						assert(selected_object != null)
-						if floor_target != null:
-							var local_snap_mode: int = get_snap_mode_if_auto()
-							var snapped_target: Vector3 = compute_snap_position(floor_target, local_snap_mode)
-							selected_object.move_to(snapped_target, current_floor)
+						assert(selected_piece != null)
+						if mouse_floor_intersection != null:
+							var snapped_position: Vector3 = compute_selected_snap_position(mouse_floor_intersection + selected_piece_offset)
+							selected_piece.move_to_remote(snapped_position, current_floor)
+							return_selected_to_saved_position = false
 							change_left_click_action(LeftClickAction.SELECT)
+							redraw_gridmap_tiles()
 					LeftClickAction.ROTATE_SELECTED:
 #						print("executing LeftClickAction.ROTATE_SELECTED")
-						assert(selected_object != null)
-						if floor_target != null:
-							var selected_position := selected_object.global_transform.origin
-							var target_direction: Vector3 = floor_target - selected_position
-							selected_object.rotate_to(compute_snap_direction(target_direction))
+						assert(selected_piece != null)
+						if mouse_floor_intersection != null:
+							var selected_position := selected_piece.global_transform.origin
+							var target_direction: Vector3 = mouse_floor_intersection - selected_position
+							selected_piece.rotate_to(compute_snap_direction(target_direction))
 							change_left_click_action(LeftClickAction.SELECT)
 					LeftClickAction.PING:
 #						print("executing LeftClickAction.PING")
-						rpc("ping_NETWORK", floor_target)
+						rpc("ping_NETWORK", mouse_floor_intersection)
 					_:
 						print("tried to execute invalid LeftClickAction")
-						assert(true)
 		else:
 			if event.button_index == BUTTON_RIGHT:
 				right_mouse_button_pressed = false
@@ -199,18 +206,29 @@ func _process(delta):
 
 	match left_click_action:
 		LeftClickAction.MOVE_SELECTED:
-			assert(selected_object != null)
+			assert(selected_piece != null)
 			var mouse_floor_intersection = get_mouse_floor_intersection(get_viewport().get_mouse_position())
-			if mouse_floor_intersection != null:
-				var local_snap_mode: int = get_snap_mode_if_auto()
-				var snapped_position: Vector3 = compute_snap_position(mouse_floor_intersection, local_snap_mode)
-				draw_snap_position(snapped_position, local_snap_mode)
+			if mouse_floor_intersection == null:
+				selected_piece.return_to_saved_position()
+			else:
+				var snapped_position: Vector3 = compute_selected_snap_position(mouse_floor_intersection + selected_piece_offset)
+				selected_piece.set_location_local(snapped_position, current_floor)
+
+				var draw_node = get_node("Draw")
+				draw_node.set_material_override(draw_material)
+				draw_node.clear()
+				draw_node.begin(Mesh.PRIMITIVE_LINES, null)
+				draw_node.add_vertex(selected_piece.saved_position + Vector3(-DRAW_WIDTH, DRAW_HEIGHT, 0))
+				draw_node.add_vertex(selected_piece.saved_position + Vector3(DRAW_WIDTH, DRAW_HEIGHT, 0))
+				draw_node.add_vertex(selected_piece.saved_position + Vector3(0, DRAW_HEIGHT, -DRAW_WIDTH))
+				draw_node.add_vertex(selected_piece.saved_position + Vector3(0, DRAW_HEIGHT, DRAW_WIDTH))
+				draw_node.end()
 		LeftClickAction.ROTATE_SELECTED:
-			assert(selected_object != null)
+			assert(selected_piece != null)
 			var mouse_floor_intersection = get_mouse_floor_intersection(get_viewport().get_mouse_position())
 			if mouse_floor_intersection != null:
-				var selected_position = selected_object.global_transform.origin
-				var selected_direction = selected_object.global_transform.basis.z
+				var selected_position = selected_piece.global_transform.origin
+				var selected_direction = selected_piece.global_transform.basis.z
 				var target_direction: Vector3 = mouse_floor_intersection - selected_position
 				var snap_direction := compute_snap_direction(target_direction)
 
@@ -241,20 +259,22 @@ func change_left_click_action(new_action: int) -> void:
 #			print("exiting LeftClickAction.SELECT")
 		LeftClickAction.MOVE_SELECTED:
 #			print("exiting LeftClickAction.MOVE_SELECTED")
-			if new_action != LeftClickAction.ROTATE_SELECTED:
-				deselect_object()
+			if return_selected_to_saved_position:
+				selected_piece.return_to_saved_position()
 			var draw_node = get_node("Draw")
 			draw_node.set_material_override(draw_material)
 			draw_node.clear()
 			draw_node.end()
+			if new_action != LeftClickAction.ROTATE_SELECTED:
+				deselect_piece()
 		LeftClickAction.ROTATE_SELECTED:
 #			print("exiting LeftClickAction.ROTATE_SELECTED")
-			if new_action != LeftClickAction.MOVE_SELECTED:
-				deselect_object()
 			var draw_node = get_node("Draw")
 			draw_node.set_material_override(draw_material)
 			draw_node.clear()
 			draw_node.end()
+			if new_action != LeftClickAction.MOVE_SELECTED:
+				deselect_piece()
 		LeftClickAction.PING:
 #			print("exiting LeftClickAction.PING")
 			$GameMenu.set_ping_pressed(false)
@@ -263,11 +283,13 @@ func change_left_click_action(new_action: int) -> void:
 	left_click_action = new_action
 
 	# Run logic when entering the new action
-#	match left_click_action:
+	match left_click_action:
 #		LeftClickAction.SELECT:
 #			print("entering LeftClickAction.SELECT")
-#		LeftClickAction.MOVE_SELECTED:
+		LeftClickAction.MOVE_SELECTED:
 #			print("entering LeftClickAction.MOVE_SELECTED")
+			selected_piece.save_current_position()
+			return_selected_to_saved_position = true
 #		LeftClickAction.ROTATE_SELECTED:
 #			print("entering LeftClickAction.ROTATE_SELECTED")
 #		LeftClickAction.PING:
@@ -284,21 +306,15 @@ func cycle_movement_action() -> void:
 			change_left_click_action(LeftClickAction.MOVE_SELECTED)
 
 
-func get_snap_mode_if_auto():
-	if Snap.move_mode == Snap.MoveMode.AUTO:
-		return get_auto_snap_mode(selected_object.tile_size_x, selected_object.tile_size_z)
-	return Snap.move_mode
-
-
-func get_auto_snap_mode(x: int, z: int) -> int:
+func get_auto_snap_mode(x_size: int, z_size: int) -> int:
 	var auto_snap_mode: int
-	if x % 2 == 0:
-		if z % 2 == 0:
+	if x_size % 2 == 0:
+		if z_size % 2 == 0:
 			auto_snap_mode = Snap.MoveMode.CORNER
 		else:
 			auto_snap_mode = Snap.MoveMode.EDGE_Z
 	else:
-		if z % 2 == 0:
+		if z_size % 2 == 0:
 			auto_snap_mode = Snap.MoveMode.EDGE_X
 		else:
 			auto_snap_mode = Snap.MoveMode.CENTER
@@ -313,76 +329,55 @@ func tile_edge(value: float) -> float:
 	return stepify(value, 2.0)
 
 
-func compute_snap_position(position: Vector3, snap_mode: int) -> Vector3:
+func snap_position(position: Vector3, snap_mode: int):
 	assert(snap_mode != Snap.MoveMode.AUTO)
-
 	match snap_mode:
 		Snap.MoveMode.CENTER:
-			return Vector3(
+			position = Vector3(
 				tile_center(position.x),
 				position.y,
 				tile_center(position.z)
 			)
 		Snap.MoveMode.CORNER:
-			return Vector3(
+			position = Vector3(
 				tile_edge(position.x),
 				position.y,
 				tile_edge(position.z)
 			)
 		Snap.MoveMode.EDGE_X:
-			return Vector3(
+			position = Vector3(
 				tile_center(position.x),
 				position.y,
 				tile_edge(position.z)
 			)
 		Snap.MoveMode.EDGE_Z:
-			return Vector3(
+			position = Vector3(
 				tile_edge(position.x),
 				position.y,
 				tile_center(position.z)
 			)
-
-	assert(snap_mode == Snap.MoveMode.OFF)
+		_:
+			assert(false)
 	return position
 
 
-func draw_snap_position(position: Vector3, snap_mode: int) -> void:
-	assert(snap_mode != Snap.MoveMode.AUTO)
+func compute_snap_position(position: Vector3, x_size: int, z_size: int) -> Vector3:
+	if Snap.enabled:
+		var local_snap_mode: int = Snap.move_mode
+		if Snap.move_mode == Snap.MoveMode.AUTO:
+			local_snap_mode = get_auto_snap_mode(x_size, z_size)
+		assert(local_snap_mode != Snap.MoveMode.AUTO)
+		return snap_position(position, local_snap_mode)
+	return position
 
-	var draw_node = get_node("Draw")
-	draw_node.set_material_override(draw_material)
-	draw_node.clear()
-	match snap_mode:
-		Snap.MoveMode.OFF:
-			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
-			draw_node.add_vertex(position)
-			draw_node.add_vertex(position + Vector3(0,1,0))
-		Snap.MoveMode.CENTER:
-			draw_node.begin(Mesh.PRIMITIVE_LINE_LOOP, null)
-			draw_node.add_vertex(position + Vector3(-DRAW_WIDTH, DRAW_HEIGHT, -DRAW_WIDTH))
-			draw_node.add_vertex(position + Vector3(-DRAW_WIDTH, DRAW_HEIGHT, DRAW_WIDTH))
-			draw_node.add_vertex(position + Vector3(DRAW_WIDTH, DRAW_HEIGHT, DRAW_WIDTH))
-			draw_node.add_vertex(position + Vector3(DRAW_WIDTH, DRAW_HEIGHT, -DRAW_WIDTH))
-		Snap.MoveMode.CORNER:
-			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
-			draw_node.add_vertex(position + Vector3(-DRAW_WIDTH, DRAW_HEIGHT, 0))
-			draw_node.add_vertex(position + Vector3(DRAW_WIDTH, DRAW_HEIGHT, 0))
-			draw_node.add_vertex(position + Vector3(0, DRAW_HEIGHT, -DRAW_WIDTH))
-			draw_node.add_vertex(position + Vector3(0, DRAW_HEIGHT, DRAW_WIDTH))
-		Snap.MoveMode.EDGE_X:
-			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
-			draw_node.add_vertex(position + Vector3(-DRAW_WIDTH, DRAW_HEIGHT, 0))
-			draw_node.add_vertex(position + Vector3(DRAW_WIDTH, DRAW_HEIGHT, 0))
-		Snap.MoveMode.EDGE_Z:
-			draw_node.begin(Mesh.PRIMITIVE_LINES, null)
-			draw_node.add_vertex(position + Vector3(0, DRAW_HEIGHT, -DRAW_WIDTH))
-			draw_node.add_vertex(position + Vector3(0, DRAW_HEIGHT, DRAW_WIDTH))
-	draw_node.end()
+
+func compute_selected_snap_position(position: Vector3) -> Vector3:
+	return compute_snap_position(position, selected_piece.tile_size_x, selected_piece.tile_size_z)
 
 
 func compute_snap_direction(direction: Vector3) -> Vector3:
 	direction = direction.normalized()
-	if not Snap.rotate_on:
+	if not Snap.enabled:
 		return direction
 
 	var dot := Vector3(1, 0, 0).dot(direction)
@@ -394,15 +389,15 @@ func compute_snap_direction(direction: Vector3) -> Vector3:
 	return snap_direction
 
 
-func select_object(object):
-	object.set_selected()
-	selected_object = object
+func select_piece(piece: Piece) -> void:
+	piece.set_selected()
+	selected_piece = piece
 	$GameMenu.set_selected(true)
 
 
-func deselect_object():
-	selected_object.set_deselected()
-	selected_object = null
+func deselect_piece() -> void:
+	selected_piece.set_deselected()
+	selected_piece = null
 	$GameMenu.set_selected(false)
 
 
@@ -426,6 +421,22 @@ func get_mouse_floor_intersection(screen_position, height = 0):
 		print("Caught a div by zero in tile lookup")
 
 	return null
+
+
+func get_tile_at_location(position: Vector3, target_floor: int):
+	var tile_x := floor(position.x / 2.0)
+	var tile_y := floor(position.z / 2.0)
+	return sparse_map_lookup(shared_sparse_map, tile_x, tile_y, target_floor)
+
+
+func get_height_multiplier_at_location(position: Vector3, target_floor: int) -> float:
+	var tile = get_tile_at_location(position, target_floor)
+	if tile != null:
+		if tile.tile_type == "stairsup":
+			return 1.0
+		if tile.tile_type == "stairsdown":
+			return -1.0
+	return 0.0
 
 
 remotesync func ping_NETWORK(position):
@@ -715,64 +726,6 @@ func load_room_from_file(filename):
 				else:
 					print("Found an unknown character at ", tx, ",", ty,",",tz,"[",raw_tiles[tz][ty][tx],"]")
 
-	# Populate Rotations
-	for z in full_sparse_map:
-		for y in full_sparse_map[z]:
-			for x in full_sparse_map[z][y]:
-				if full_sparse_map[z][y][x].tile_type == "door" || full_sparse_map[z][y][x].tile_type == "hiddendoor":
-					var up_tile = sparse_map_lookup(full_sparse_map, x, y+1, z)
-					var down_tile = sparse_map_lookup(full_sparse_map, x, y-1, z)
-					var left_tile = sparse_map_lookup(full_sparse_map, x+1, y, z)
-					var right_tile = sparse_map_lookup(full_sparse_map, x-1, y, z)
-
-					if up_tile != null && up_tile.tile_type == "floor":
-						full_sparse_map[z][y][x].rotation = 3
-
-					if down_tile != null && down_tile.tile_type == "floor":
-						full_sparse_map[z][y][x].rotation = 2
-
-					if left_tile != null && left_tile.tile_type == "floor":
-						full_sparse_map[z][y][x].rotation = 0
-
-					if right_tile != null && right_tile.tile_type == "floor":
-						full_sparse_map[z][y][x].rotation = 1
-
-				if full_sparse_map[z][y][x].tile_type == "stairsup" || full_sparse_map[z][y][x].tile_type == "stairsdown":
-					var up_tile = sparse_map_lookup(full_sparse_map, x, y+1, z)
-					var down_tile = sparse_map_lookup(full_sparse_map, x, y-1, z)
-					var left_tile = sparse_map_lookup(full_sparse_map, x+1, y, z)
-					var right_tile = sparse_map_lookup(full_sparse_map, x-1, y, z)
-
-					if up_tile != null && up_tile.tile_type == "floor":
-						full_sparse_map[z][y][x].rotation = 3
-
-					if down_tile != null && down_tile.tile_type == "floor":
-						full_sparse_map[z][y][x].rotation = 2
-
-					if left_tile != null && left_tile.tile_type == "floor":
-						full_sparse_map[z][y][x].rotation = 0
-
-					if right_tile != null && right_tile.tile_type == "floor":
-						full_sparse_map[z][y][x].rotation = 1
-
-				if full_sparse_map[z][y][x].tile_type == "start":
-					var up_tile = sparse_map_lookup(full_sparse_map, x, y+1, z)
-					var down_tile = sparse_map_lookup(full_sparse_map, x, y-1, z)
-					var left_tile = sparse_map_lookup(full_sparse_map, x+1, y, z)
-					var right_tile = sparse_map_lookup(full_sparse_map, x-1, y, z)
-
-					if up_tile != null && up_tile.tile_type == "floor":
-						full_sparse_map[z][y][x].rotation = 2
-
-					if down_tile != null && down_tile.tile_type == "floor":
-						full_sparse_map[z][y][x].rotation = 3
-
-					if left_tile != null && left_tile.tile_type == "floor":
-						full_sparse_map[z][y][x].rotation = 1
-
-					if right_tile != null && right_tile.tile_type == "floor":
-						full_sparse_map[z][y][x].rotation = 0
-
 	# Assemble all of the tiles into rooms
 	while len(possible_rooms) > 0:
 		var built_room = build_room(
@@ -825,6 +778,142 @@ func load_room_from_file(filename):
 			for x in wall_sparsemap[z][y]:
 				sparse_map_insert(full_sparse_map, x, y, z, wall_sparsemap[z][y][x])
 	
+
+	# Populate Rotations
+	for z in full_sparse_map:
+		for y in full_sparse_map[z]:
+			for x in full_sparse_map[z][y]:
+				################################################################
+				# Rotate and Position Doors
+				################################################################
+				if full_sparse_map[z][y][x].tile_type == "door" || full_sparse_map[z][y][x].tile_type == "hiddendoor":
+					# Build the hashkey based on orthogonal tiles
+					var up_tile = sparse_map_lookup(full_sparse_map, x, y+1, z)
+					var down_tile = sparse_map_lookup(full_sparse_map, x, y-1, z)
+					var left_tile = sparse_map_lookup(full_sparse_map, x+1, y, z)
+					var right_tile = sparse_map_lookup(full_sparse_map, x-1, y, z)
+					var tiles = [up_tile, right_tile, down_tile, left_tile]
+					var case_array = []
+					var room_count = 0
+					var temp_room_index_mapping = {}
+					for tile in tiles:
+						if tile != null && tile.tile_type == "floor":
+							var found_room_match = false
+							for room in tile.rooms:
+								if room in temp_room_index_mapping:
+									case_array.append(temp_room_index_mapping[room])
+									found_room_match = true
+									break
+							if !found_room_match:
+								room_count += 1
+								case_array.append(room_count)
+								for room in tile.rooms:
+									temp_room_index_mapping[room] = room_count
+						else:
+							case_array.append(0)
+
+					var case = str(case_array[0]) + str(case_array[1]) + str(case_array[2]) + str(case_array[3]) 
+					print(case)
+					var cases = {
+						"0000": ["door", 2],
+						"0001": ["door", 0],
+						"0010": ["door", 2],
+						"0011": ["door-diag", 0],
+						"0012": ["door-diag", 2],
+						"0100": ["door", 0],
+						"0101": ["door", 0],
+						"0102": ["door", 0],
+						"0110": ["door-diag", 2],
+						"0111": ["door-cross", 0],
+						"0112": ["door-diag", 2],
+						"0120": ["door-diag", 0],
+						"0121": ["door-cross", 0],
+						"0122": ["door-diag", 0],
+						"0123": ["door-cross", 0],
+						"1000": ["door", 2],
+						"1001": ["door-diag", 2],
+						"1002": ["door-diag", 0],
+						"1010": ["door", 2],
+						"1011": ["door-cross", 0],
+						"1012": ["door-cross", 0],
+						"1020": ["door", 2],
+						"1021": ["door-diag", 2],
+						"1022": ["door-diag", 0],
+						"1023": ["door-cross", 0],
+						"1100": ["door-diag", 0],
+						"1101": ["door-cross", 0],
+						"1102": ["door-diag", 0],
+						"1110": ["door-cross", 0],
+						"1111": ["door-cross", 0],
+						"1112": ["door-cross", 0],
+						"1120": ["door-diag", 0],
+						"1121": ["door-cross", 0],
+						"1122": ["door-diag", 0],
+						"1123": ["door-cross", 0],
+						"1200": ["door-diag", 2],
+						"1201": ["door-diag", 2],
+						"1202": ["door-cross", 0],
+						"1203": ["door-cross", 0],
+						"1210": ["door-cross", 0],
+						"1211": ["door-cross", 0],
+						"1213": ["door-cross", 0],
+						"1220": ["door-diag", 2],
+						"1221": ["door-diag", 2],
+						"1222": ["door-cross", 0],
+						"1223": ["door-cross", 0],
+						"1230": ["door-cross", 0],
+						"1231": ["door-cross", 0],
+						"1232": ["door-cross", 0],
+						"1233": ["door-cross", 0],
+						"1234": ["door-cross", 0],
+					}
+
+					full_sparse_map[z][y][x].tile_type = cases[case][0]
+					full_sparse_map[z][y][x].rotation = cases[case][1]
+
+				################################################################
+				# Rotate stairs
+				################################################################
+				if full_sparse_map[z][y][x].tile_type == "stairsup" || full_sparse_map[z][y][x].tile_type == "stairsdown":
+					var up_tile = sparse_map_lookup(full_sparse_map, x, y+1, z)
+					var down_tile = sparse_map_lookup(full_sparse_map, x, y-1, z)
+					var left_tile = sparse_map_lookup(full_sparse_map, x+1, y, z)
+					var right_tile = sparse_map_lookup(full_sparse_map, x-1, y, z)
+
+					if up_tile != null && up_tile.tile_type == "floor":
+						full_sparse_map[z][y][x].rotation = 3
+
+					if down_tile != null && down_tile.tile_type == "floor":
+						full_sparse_map[z][y][x].rotation = 2
+
+					if left_tile != null && left_tile.tile_type == "floor":
+						full_sparse_map[z][y][x].rotation = 0
+
+					if right_tile != null && right_tile.tile_type == "floor":
+						full_sparse_map[z][y][x].rotation = 1
+
+				################################################################
+				# Rotate start tiles
+				################################################################
+				if full_sparse_map[z][y][x].tile_type == "start":
+					var up_tile = sparse_map_lookup(full_sparse_map, x, y+1, z)
+					var down_tile = sparse_map_lookup(full_sparse_map, x, y-1, z)
+					var left_tile = sparse_map_lookup(full_sparse_map, x+1, y, z)
+					var right_tile = sparse_map_lookup(full_sparse_map, x-1, y, z)
+
+					if up_tile != null && up_tile.tile_type == "floor":
+						full_sparse_map[z][y][x].rotation = 2
+
+					if down_tile != null && down_tile.tile_type == "floor":
+						full_sparse_map[z][y][x].rotation = 3
+
+					if left_tile != null && left_tile.tile_type == "floor":
+						full_sparse_map[z][y][x].rotation = 1
+
+					if right_tile != null && right_tile.tile_type == "floor":
+						full_sparse_map[z][y][x].rotation = 0
+
+
 	# Reveal the first room
 	# print(rooms[sparse_map_lookup(full_sparse_map,0,0,0).rooms[0]])
 	share_room(sparse_map_lookup(full_sparse_map,0,0,0).rooms[0])
@@ -1262,7 +1351,7 @@ func _on_GameMenu_unhide_tile():
 func _on_GameMenu_create_mini(name: String, color: Color, model_index: int) -> void:
 	var id: String = str(get_tree().get_network_unique_id()) + "_" + str(randi())
 
-	var snapped_position: Vector3 = compute_snap_position($camera_origin.translation, Snap.MoveMode.CENTER)
+	var snapped_position: Vector3 = snap_position($camera_origin.translation, Snap.MoveMode.CENTER)
 	snapped_position.y = 0
 
 	if !get_tree().is_network_server():
@@ -1285,7 +1374,7 @@ func _on_GameMenu_create_line(name, color, length, width):
 	var tile_size_z: int = width / 5
 
 	# For line spell shapes, always snap to the center of the tile
-	var snapped_position: Vector3 = compute_snap_position($camera_origin.translation, Snap.MoveMode.CENTER)
+	var snapped_position: Vector3 = snap_position($camera_origin.translation, Snap.MoveMode.CENTER)
 	snapped_position.y = 0
 
 	rpc("create_line_NETWORK",
@@ -1304,8 +1393,7 @@ func _on_GameMenu_create_circle(name: String, color: Color, radius: int, arc_deg
 
 	var tile_size: int = (radius * 2) / 5
 	
-	var local_snap_mode: int = get_auto_snap_mode(tile_size, tile_size)
-	var snapped_position: Vector3 = compute_snap_position($camera_origin.translation, local_snap_mode)
+	var snapped_position: Vector3 = compute_snap_position($camera_origin.translation, tile_size, tile_size)
 	snapped_position.y = 0
 
 	rpc("create_circle_NETWORK",
@@ -1325,8 +1413,7 @@ func _on_GameMenu_create_rectangle(name: String, color: Color, x: int, z: int):
 	var tile_size_x: int = x / 5
 	var tile_size_z: int = z / 5
 
-	var local_snap_mode: int = get_auto_snap_mode(tile_size_x, tile_size_z)
-	var snapped_position: Vector3 = compute_snap_position($camera_origin.translation, local_snap_mode)
+	var snapped_position: Vector3 = compute_snap_position($camera_origin.translation, tile_size_x, tile_size_z)
 	snapped_position.y = 0
 
 	rpc("create_rectangle_NETWORK",
@@ -1341,11 +1428,11 @@ func _on_GameMenu_create_rectangle(name: String, color: Color, x: int, z: int):
 
 
 func _on_GameMenu_delete():
-	var to_delete = selected_object
+	var to_delete = selected_piece
 	change_left_click_action(LeftClickAction.SELECT)
 	to_delete.delete()
 	redraw_gridmap_tiles()
-	assert(selected_object == null)
+	assert(selected_piece == null)
 
 
 func _on_GameMenu_toggle_ping(is_enabled):
