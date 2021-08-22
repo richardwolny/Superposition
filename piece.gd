@@ -54,16 +54,10 @@ func _process(delta: float) -> void:
 
 
 func set_selected() -> void:
-	var surface_material = self.get_node("mesh").get_surface_material(0)
-	surface_material.set_shader_param("enable", true)
-	surface_material.next_pass.set_shader_param("enable", true)
 	_is_selected = true
 
 
 func set_deselected() -> void:
-	var surface_material = self.get_node("mesh").get_surface_material(0)
-	surface_material.set_shader_param("enable", false)
-	surface_material.next_pass.set_shader_param("enable", false)
 	_is_selected = false
 
 
