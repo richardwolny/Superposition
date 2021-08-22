@@ -115,8 +115,10 @@ func _unhandled_input(event):
 						if result:
 							if result.collider.has_method("set_selected"):
 								select_piece(result.collider)
-								change_left_click_action(LeftClickAction.MOVE_SELECTED)
+								selected_piece.save_current_position()
 								selected_piece_offset = selected_piece.global_transform.origin - mouse_floor_intersection
+								return_selected_to_saved_position = true
+								change_left_click_action(LeftClickAction.MOVE_SELECTED)
 					LeftClickAction.MOVE_SELECTED:
 #						print("executing LeftClickAction.MOVE_SELECTED")
 						assert(selected_piece != null)
@@ -283,13 +285,11 @@ func change_left_click_action(new_action: int) -> void:
 	left_click_action = new_action
 
 	# Run logic when entering the new action
-	match left_click_action:
+#	match left_click_action:
 #		LeftClickAction.SELECT:
 #			print("entering LeftClickAction.SELECT")
-		LeftClickAction.MOVE_SELECTED:
+#		LeftClickAction.MOVE_SELECTED:
 #			print("entering LeftClickAction.MOVE_SELECTED")
-			selected_piece.save_current_position()
-			return_selected_to_saved_position = true
 #		LeftClickAction.ROTATE_SELECTED:
 #			print("entering LeftClickAction.ROTATE_SELECTED")
 #		LeftClickAction.PING:
