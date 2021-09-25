@@ -134,8 +134,8 @@ build-exports:
 
     # Use butler to upload the three desktop version to itch.io
     - ./butler push build/linux asherglick/superposition:linux --userversion ${CI_COMMIT_SHORT_SHA}
-    - ./butler push build/windows asherglick/superposition:windows --userversion ${COMMIT_HASH_ENV_THING}
-    - ./butler push build/osx asherglick/superposition:osx --userversion ${COMMIT_HASH_ENV_THING}
+    - ./butler push build/windows asherglick/superposition:windows --userversion ${CI_COMMIT_SHORT_SHA}
+    - ./butler push build/osx asherglick/superposition:osx --userversion ${CI_COMMIT_SHORT_SHA}
 
 
   # artifacts:
