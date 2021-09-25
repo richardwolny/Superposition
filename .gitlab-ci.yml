@@ -28,6 +28,14 @@ setup-cache:
       policy: pull-push
   script:
     - |
+      if [ -f "Godot_v${GODOT_VERSION}-stable_linux_headless.64" ] && [ -d "${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable" ]
+      then
+        echo "Both items are installed, not installing wget"
+      else
+        echo "Installing wget for downloading"
+        apt-get install wget
+      fi
+    - |
       if [ -n "Godot_linux_headless.64" ]
       then
         wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_VERSION}-stable_linux_headless.64.zip
