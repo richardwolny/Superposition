@@ -78,8 +78,9 @@ build-exports:
 
   script:
     - echo $CI_COMMIT_SHORT_SHA 
-    - ls Godot_v${GODOT_VERSION}-stable_linux_headless.64
-    - ls ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
+    - ls Godot_v${GODOT_VERSION}-stable_linux_headless.64 || echo "notfound"
+    - ls ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/ || echo "notfound"
+    - ls .
 
   # artifacts:
   #   paths:
