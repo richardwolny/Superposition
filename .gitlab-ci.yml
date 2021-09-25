@@ -89,20 +89,19 @@ build-exports:
 
     - echo -e "extends Node\n\nfunc id():\n\treturn \""${CI_COMMIT_SHORT_SHA}"\"" > version.gd
     - cat version.gd
+    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Linux/X11"
+    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Windows Desktop"
+    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Mac OSX"
+    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "HTML5"
 
-    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "Linux/X11"
-    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "Windows Desktop"
-    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "Mac OSX"
-    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "HTML5"
-
-  artifacts:
-    paths:
-    - build/linux
-    - build/osx
-    - build/web
-    - build/windows
-    # Expire after 1 hour
-    expire_in: 1 hr
+  # artifacts:
+  #   paths:
+  #   - build/linux
+  #   - build/osx
+  #   - build/web
+  #   - build/windows
+  #   # Expire after 1 hour
+  #   expire_in: 1 hr
 
 # deploy-itch:
 #  only:
