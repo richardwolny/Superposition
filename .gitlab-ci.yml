@@ -1,0 +1,128 @@
+variables:
+  # The parent folder where the prod webdeploy should put the web files
+  DEPLOY_FOLDER: "superposition.aglick.com"
+
+  DEV_DEPLOY_FOLDER: "superposition-dev.aglick.com"
+  # The version of godot to use for the build process
+  GODOT_VERSION: 3.3.2
+  GODOT_EXPORT_TEMPLATE_DIR: "~/.local/share/godot/templates"
+
+stages:
+  - setupcache
+  - build
+  # - test
+  # - deploy
+
+################################################################################
+# Downloads the godot binary and caches it for later pipelines to use without
+# needing to redownload it.
+################################################################################
+setup-cache:
+  image: ubuntu-18.04
+  stage: setupcache
+  cache:
+    - key: $GODOT_VERSION
+      paths:
+        - Godot_v${GODOT_VERSION}-stable_linux_headless.64
+        - ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
+      policy: pull-push
+  script:
+    - |
+      if [ -n "Godot_linux_headless.64" ]
+      then
+        wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_VERSION}-stable_linux_headless.64.zip
+        unzip Godot_v${GODOT_VERSION}-stable_linux_headless.64.zip
+        rm Godot_v${GODOT_VERSION}-stable_linux_headless.64.zip
+        mv Godot_v${GODOT_VERSION}-stable_linux_headless.64 Godot_linux_headless.64
+      else
+        echo "Godot Binary Already Cached"
+      fi
+    - |
+      if [ -d "${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable" ]
+      then
+        echo "Godot Export Templates Already Cached"
+      else
+        echo "Godot Export Templates Not Found, Downloading"
+        mkdir -v -p ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
+        wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+        unzip Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+        rm Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+        mv templates/* ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
+        rm -r templates
+        ls ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
+      fi
+
+
+################################################################################
+# Build the linux, windows, web, and mac versions as artifacts to be used in
+# later steps.
+################################################################################
+build-exports:
+  image: ubuntu-18.04
+  stage: build
+  cache:
+    - key: $GODOT_VERSION
+      paths:
+        - Godot_v${GODOT_VERSION}-stable_linux_headless.64
+        - ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
+      policy: pull
+
+
+  script:
+    - echo $CI_COMMIT_SHORT_SHA 
+    - ls Godot_v${GODOT_VERSION}-stable_linux_headless.64
+    - ls ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
+
+  # artifacts:
+  #   paths:
+  #   - output
+  #   # Expire after 1 hour
+  #   expire_in: 1 hr
+
+# deploy-itch:
+#  only:
+#    - master
+
+# deploy-prod:
+#   image: asherglick/webdeploy:20170802
+#   stage: deploy
+#   script:
+#     # Run ssh-agent (inside the build environment)
+#     - eval $(ssh-agent -s)
+#     # Add the SSH key stored in the environment to the agent store
+#     - ssh-add <(echo "$PROD_SSH_PRIVATE_KEY")
+#     # For Docker builds disable host key checking. Be aware that by adding that
+#     # you are susceptible to man-in-the-middle attacks.
+#     # WARNING: Use this only with the Docker executor, if you use it with shell
+#     # you will overwrite your user's SSH config.
+#     - mkdir -p ~/.ssh
+#     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+#     - ssh $PROD_USER@$PROD_HOST ls
+
+#     # Sync over the files
+#     - rsync --recursive --archive --verbose -e ssh --delete output/ $PROD_USER@$PROD_HOST:/home/$PROD_USER/$DEPLOY_FOLDER/
+#     - ssh $PROD_USER@$PROD_HOST "cd $DEPLOY_FOLDER; tree -a"
+#   only:
+#     - master
+
+# deploy-dev:
+#   image: asherglick/webdeploy:20170802
+#   stage: deploy
+#   script:
+#     # Run ssh-agent (inside the build environment)
+#     - eval $(ssh-agent -s)
+#     # Add the SSH key stored in the environment to the agent store
+#     - ssh-add <(echo "$DEV_SSH_PRIVATE_KEY")
+#     # For Docker builds disable host key checking. Be aware that by adding that
+#     # you are susceptible to man-in-the-middle attacks.
+#     # WARNING: Use this only with the Docker executor, if you use it with shell
+#     # you will overwrite your user's SSH config.
+#     - mkdir -p ~/.ssh
+#     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+#     - ssh $DEV_USER@$DEV_HOST ls
+
+#     # Sync over the files
+#     - rsync --recursive --archive --verbose -e ssh --delete output/ $DEV_USER@$DEV_HOST:/home/$DEV_USER/$DEV_DEPLOY_FOLDER/
+#     - ssh $DEV_USER@$DEV_HOST "cd $DEV_DEPLOY_FOLDER; tree -a"
+#   only:
+#     - dev
