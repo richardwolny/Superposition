@@ -91,9 +91,9 @@ build-exports:
     - cat version.gd
 
     - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "Linux/X11"
-    # - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "Windows Desktop"
-    # - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "Mac OSX"
-    # - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "HTML5"
+    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "Windows Desktop"
+    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "Mac OSX"
+    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "HTML5"
 
   artifacts:
     paths:
