@@ -5,7 +5,7 @@ variables:
   DEV_DEPLOY_FOLDER: "superposition-dev.aglick.com"
   # The version of godot to use for the build process
   GODOT_VERSION: 3.3.2
-  GODOT_EXPORT_TEMPLATE_DIR: "~/.local/share/godot/templates"
+  GODOT_EXPORT_TEMPLATE_DIR: "/root/.local/share/godot/templates"
 
 stages:
   - setupcache
