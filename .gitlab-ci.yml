@@ -75,7 +75,7 @@ build-exports:
 
   script:
     - mkdir -p /root/${GODOT_EXPORT_TEMPLATE_DIR}
-    - ln -s templates /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable
+    - ln -s $PWD/templates /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable
 
     - echo Godot_v${GODOT_VERSION}-stable_linux_headless.64
     - ls Godot_v${GODOT_VERSION}-stable_linux_headless.64 || echo "notfound"
