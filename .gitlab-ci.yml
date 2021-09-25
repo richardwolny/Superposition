@@ -124,7 +124,7 @@ build-exports:
     - apt-get update
     - apt-get install -y ca-certificates
 
-    - ./butler push src/build/linux asherglick/superposition:linux --userversion ${CI_COMMIT_SHORT_SHA}
+    - ./butler push build/linux asherglick/superposition:linux --userversion ${CI_COMMIT_SHORT_SHA}
 
 
   # artifacts:
