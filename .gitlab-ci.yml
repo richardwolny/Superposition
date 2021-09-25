@@ -28,7 +28,7 @@ setup-cache:
       policy: pull-push
   script:
     - |
-      if [ -f "Godot_v${GODOT_VERSION}-stable_linux_headless.64" ] && [ -d "${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable" ]
+      if [ -f "Godot_v${GODOT_VERSION}-stable_linux_headless.64" ] && [ -d "templates" ]
       then
         echo "Both items are installed, not installing wget"
       else
