@@ -77,8 +77,7 @@ build-exports:
       policy: pull
 
   script:
-
-    - echo "extends Node\n\nfunc id():\t\treturn \""${CI_COMMIT_SHORT_SHA}"\"" > version.gd
+    - echo -e "extends Node\n\nfunc id():\n\treturn \""${CI_COMMIT_SHORT_SHA}"\"" > version.gd
     - cat version.gd
 
     # - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "Linux/X11"
