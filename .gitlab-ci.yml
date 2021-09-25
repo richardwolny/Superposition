@@ -5,7 +5,7 @@ variables:
   DEV_DEPLOY_FOLDER: "superposition-dev.aglick.com"
   # The version of godot to use for the build process
   GODOT_VERSION: 3.3.2
-  GODOT_EXPORT_TEMPLATE_DIR: "/root/.local/share/godot/templates"
+  GODOT_EXPORT_TEMPLATE_DIR: ".local/share/godot/templates"
 
 stages:
   - setupcache
@@ -24,7 +24,7 @@ setup-cache:
     - key: $GODOT_VERSION
       paths:
         - Godot_v${GODOT_VERSION}-stable_linux_headless.64
-        - ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
+        - templates/
       policy: pull-push
   script:
     - |
@@ -47,7 +47,7 @@ setup-cache:
         rm Godot_v${GODOT_VERSION}-stable_linux_headless.64.zip
       fi
     - |
-      if [ -d "${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable" ]
+      if [ -d "templates" ]
       then
         echo "Godot Export Templates Already Cached"
       else
@@ -56,9 +56,6 @@ setup-cache:
         wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz
         unzip Godot_v${GODOT_VERSION}-stable_export_templates.tpz
         rm Godot_v${GODOT_VERSION}-stable_export_templates.tpz
-        mv templates/* ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
-        rm -r templates
-        ls ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
       fi
 
 
@@ -77,6 +74,7 @@ build-exports:
       policy: pull
 
   script:
+    - ln templates /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
 
     - echo Godot_v${GODOT_VERSION}-stable_linux_headless.64
     - ls Godot_v${GODOT_VERSION}-stable_linux_headless.64 || echo "notfound"
