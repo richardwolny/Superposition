@@ -34,7 +34,7 @@ setup-cache:
       else
         echo "Installing wget for downloading"
         apt-get update
-        apt-get install -y wget
+        apt-get install -y wget unzip
       fi
     - |
       if [ -n "Godot_linux_headless.64" ]
