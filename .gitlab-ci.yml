@@ -33,6 +33,8 @@ setup-cache:
         - butler
         - 7z.so
         - libc7zip.so
+      policy: pull-push
+
   script:
     - |
       if [ -f "Godot_v${GODOT_VERSION}-stable_linux_headless.64" ] && [ -d "templates" ] && [ -f butler ]
@@ -91,7 +93,12 @@ build-exports:
         - Godot_v${GODOT_VERSION}-stable_linux_headless.64
         - ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
       policy: pull
-
+    - key: $BUTLER_VERSION
+      paths:
+        - butler
+        - 7z.so
+        - libc7zip.so
+      policy: pull
   script:
     - mkdir -p /root/${GODOT_EXPORT_TEMPLATE_DIR}
     - ln -s $PWD/templates /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable
