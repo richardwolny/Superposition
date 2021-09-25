@@ -36,15 +36,18 @@ setup-cache:
       policy: pull-push
 
   script:
+    # Download wget and unzip if any of the requirements are not already downloaded
     - |
       if [ -f "Godot_v${GODOT_VERSION}-stable_linux_headless.64" ] && [ -d "templates" ] && [ -f butler ]
       then
-        echo "Both items are installed, not installing wget"
+        echo "All items are installed, not installing wget"
       else
         echo "Installing wget for downloading"
         apt-get update
         apt-get install -y wget unzip
       fi
+
+    # Download the godot headless binary if it is not already downloaded
     - |
       if [ -f "Godot_v${GODOT_VERSION}-stable_linux_headless.64" ]
       then
@@ -55,6 +58,8 @@ setup-cache:
         unzip Godot_v${GODOT_VERSION}-stable_linux_headless.64.zip
         rm Godot_v${GODOT_VERSION}-stable_linux_headless.64.zip
       fi
+
+    # Download the godot export templates if it is not already downloaded
     - |
       if [ -d "templates" ]
       then
@@ -67,13 +72,14 @@ setup-cache:
         rm Godot_v${GODOT_VERSION}-stable_export_templates.tpz
       fi
 
+    # Download butler from itch.io if it is not already downloaded
     - |
       if [ -f butler ]
       then
         echo "Butler Binary Already Cached"
       else
         echo "No Butler Binary Cached"
-        wget -L -O butler.zip https://broth.itch.ovh/butler/linux-amd64/${BUTLER_VERSION}/archive/default
+        wget -q -L -O butler.zip https://broth.itch.ovh/butler/linux-amd64/${BUTLER_VERSION}/archive/default
         unzip butler.zip
         rm butler.zip
       fi
@@ -101,7 +107,7 @@ build-exports:
       policy: pull
   script:
     - mkdir -p /root/${GODOT_EXPORT_TEMPLATE_DIR}
-    - ln -s $PWD/templates /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable
+    # - ln -s $PWD/templates /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable
 
     - echo Godot_v${GODOT_VERSION}-stable_linux_headless.64
     - ls Godot_v${GODOT_VERSION}-stable_linux_headless.64 || echo "notfound"
@@ -112,19 +118,24 @@ build-exports:
     - ls /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/ || echo "notfound"
     - ls .
 
-
+    # Dump the current version hash into the "version.gd" file so it can be used ingame
     - echo -e "extends Node\n\nfunc id():\n\treturn \""${CI_COMMIT_SHORT_SHA}"\"" > version.gd
     - cat version.gd
+
+    # Godot Export All Of the Builds
     - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Linux/X11"
     - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Windows Desktop"
     - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Mac OSX"
     - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "HTML5"
 
-
+    # Install Certificates to make butler happy
     - apt-get update
     - apt-get install -y ca-certificates
 
+    # Use butler to upload the three desktop version to itch.io
     - ./butler push build/linux asherglick/superposition:linux --userversion ${CI_COMMIT_SHORT_SHA}
+    - ./butler push build/windows asherglick/superposition:windows --userversion ${COMMIT_HASH_ENV_THING}
+    - ./butler push build/osx asherglick/superposition:osx --userversion ${COMMIT_HASH_ENV_THING}
 
 
   # artifacts:
