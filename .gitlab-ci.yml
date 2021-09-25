@@ -121,6 +121,9 @@ build-exports:
     - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "HTML5"
 
 
+    - apt-get update
+    - apt-get install -y ca-certificates
+
     - ./butler push src/build/linux asherglick/superposition:linux --userversion ${CI_COMMIT_SHORT_SHA}
 
 
