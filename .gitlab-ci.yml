@@ -23,12 +23,12 @@ setup-cache:
   image: ubuntu:18.04
   stage: setupcache
   cache:
-    - key: $GODOT_VERSION
+    - key: GODOT_$GODOT_VERSION
       paths:
         - Godot_v${GODOT_VERSION}-stable_linux_headless.64
         - templates/
       policy: pull-push
-    - key: $BUTLER_VERSION
+    - key: BUTLER_$BUTLER_VERSION
       paths:
         - butler
         - 7z.so
@@ -88,12 +88,12 @@ build-exports:
   image: ubuntu:18.04
   stage: build
   cache:
-    - key: $GODOT_VERSION
+    - key: GODOT_$GODOT_VERSION
       paths:
         - Godot_v${GODOT_VERSION}-stable_linux_headless.64
         - ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
       policy: pull
-    - key: $BUTLER_VERSION
+    - key: BUTLER_$BUTLER_VERSION
       paths:
         - butler
         - 7z.so
@@ -119,6 +119,10 @@ build-exports:
     - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Windows Desktop"
     - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Mac OSX"
     - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "HTML5"
+
+
+    - ./butler push src/build/linux asherglick/superposition:linux --userversion ${CI_COMMIT_SHORT_SHA}
+
 
   # artifacts:
   #   paths:
