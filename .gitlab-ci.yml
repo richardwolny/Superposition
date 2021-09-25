@@ -18,7 +18,7 @@ stages:
 # needing to redownload it.
 ################################################################################
 setup-cache:
-  image: ubuntu-18.04
+  image: ubuntu:18.04
   stage: setupcache
   cache:
     - key: $GODOT_VERSION
@@ -58,7 +58,7 @@ setup-cache:
 # later steps.
 ################################################################################
 build-exports:
-  image: ubuntu-18.04
+  image: ubuntu:18.04
   stage: build
   cache:
     - key: $GODOT_VERSION
