@@ -79,8 +79,8 @@ build-exports:
 
     - echo Godot_v${GODOT_VERSION}-stable_linux_headless.64
     - ls Godot_v${GODOT_VERSION}-stable_linux_headless.64 || echo "notfound"
-    - echo ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
-    - ls ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/ || echo "notfound"
+    - echo /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable
+    - ls /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable || echo "notfound"
     - ls .
 
 
