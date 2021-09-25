@@ -76,12 +76,15 @@ build-exports:
         - ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/
       policy: pull
 
-
   script:
-    - echo $CI_COMMIT_SHORT_SHA 
-    - ls Godot_v${GODOT_VERSION}-stable_linux_headless.64 || echo "notfound"
-    - ls ${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/ || echo "notfound"
-    - ls .
+
+    - echo "extends Node\n\nfunc id():\t\treturn \""${CI_COMMIT_SHORT_SHA}"\"" > version.gd
+    - cat version.gd
+
+    # - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "Linux/X11"
+    # - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "Windows Desktop"
+    # - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "Mac OSX"
+    # - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --export "HTML5"
 
   # artifacts:
   #   paths:
