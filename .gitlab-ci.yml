@@ -37,13 +37,14 @@ setup-cache:
         apt-get install -y wget unzip
       fi
     - |
-      if [ -n "Godot_linux_headless.64" ]
+      if [ -f "Godot_v${GODOT_VERSION}-stable_linux_headless.64" ]
       then
+        echo "Godot Binary Already Cached"
+      else
+        echo "Binary Not Found, Downloading"
         wget -q https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_VERSION}-stable_linux_headless.64.zip
         unzip Godot_v${GODOT_VERSION}-stable_linux_headless.64.zip
         rm Godot_v${GODOT_VERSION}-stable_linux_headless.64.zip
-      else
-        echo "Godot Binary Already Cached"
       fi
     - |
       if [ -d "${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable" ]
