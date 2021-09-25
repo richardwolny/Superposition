@@ -33,6 +33,7 @@ setup-cache:
         echo "Both items are installed, not installing wget"
       else
         echo "Installing wget for downloading"
+        apt-get update
         apt-get install wget
       fi
     - |
