@@ -10,6 +10,10 @@
 # Turn on mod_rewrite
 RewriteEngine On
 
+# Force HTTPS
+RewriteCond %{HTTPS} !=on
+RewriteRule ^(.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
 # AddEncoding allows you to have certain browsers uncompress information on the fly.
 AddEncoding gzip .gz
 
