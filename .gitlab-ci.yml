@@ -166,8 +166,8 @@ deploy-prod:
     - ssh $PROD_USER@$PROD_HOST ls
 
     # Gzip the bif files
-    - gzip --keep build/web/index.pck
-    - gzip --keep build/web/index.wasm
+    - gzip -c build/web/index.pck > build/web/index.pck.gz
+    - gzip -c build/web/index.wasm > build/web/index.wasm.gz
 
     # Sync over the files
     - rsync --recursive --archive --verbose -e ssh --delete build/web/ $PROD_USER@$PROD_HOST:/home/$PROD_USER/$DEPLOY_FOLDER/new/
