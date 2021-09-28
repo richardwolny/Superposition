@@ -123,55 +123,57 @@ build-exports:
     - cat version.gd
 
     # Godot Export All Of the Builds
-    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Linux/X11"
-    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Windows Desktop"
-    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Mac OSX"
+    #- ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Linux/X11"
+    #- ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Windows Desktop"
+    #- ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Mac OSX"
     - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "HTML5"
 
     # Install Certificates to make butler happy
-    - apt-get update
-    - apt-get install -y ca-certificates
+    #- apt-get update
+    #- apt-get install -y ca-certificates
 
     # Use butler to upload the three desktop version to itch.io
-    - ./butler push build/linux asherglick/superposition:linux --userversion ${CI_COMMIT_SHORT_SHA}
-    - ./butler push build/windows asherglick/superposition:windows --userversion ${CI_COMMIT_SHORT_SHA}
-    - ./butler push build/osx asherglick/superposition:osx --userversion ${CI_COMMIT_SHORT_SHA}
+    #- ./butler push build/linux asherglick/superposition:linux --userversion ${CI_COMMIT_SHORT_SHA}
+    #- ./butler push build/windows asherglick/superposition:windows --userversion ${CI_COMMIT_SHORT_SHA}
+    #- ./butler push build/osx asherglick/superposition:osx --userversion ${CI_COMMIT_SHORT_SHA}
 
 
-  # artifacts:
-  #   paths:
-  #   - build/linux
-  #   - build/osx
-  #   - build/web
-  #   - build/windows
-  #   # Expire after 1 hour
-  #   expire_in: 1 hr
+    # Move .htaccess into the web folder and compress the files
+    - mv web_configs/.htaccess build/web/.htaccess
 
-# deploy-itch:
-#  only:
-#    - master
+  artifacts:
+    paths:
+    - build/web
+    # Expire after 1 hour
+    expire_in: 1 hr
 
-# deploy-prod:
-#   image: asherglick/webdeploy:20170802
-#   stage: deploy
-#   script:
-#     # Run ssh-agent (inside the build environment)
-#     - eval $(ssh-agent -s)
-#     # Add the SSH key stored in the environment to the agent store
-#     - ssh-add <(echo "$PROD_SSH_PRIVATE_KEY")
-#     # For Docker builds disable host key checking. Be aware that by adding that
-#     # you are susceptible to man-in-the-middle attacks.
-#     # WARNING: Use this only with the Docker executor, if you use it with shell
-#     # you will overwrite your user's SSH config.
-#     - mkdir -p ~/.ssh
-#     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
-#     - ssh $PROD_USER@$PROD_HOST ls
 
-#     # Sync over the files
-#     - rsync --recursive --archive --verbose -e ssh --delete output/ $PROD_USER@$PROD_HOST:/home/$PROD_USER/$DEPLOY_FOLDER/
-#     - ssh $PROD_USER@$PROD_HOST "cd $DEPLOY_FOLDER; tree -a"
-#   only:
-#     - master
+
+deploy-prod:
+  image: asherglick/webdeploy:20170802
+  stage: deploy
+  script:
+    # Run ssh-agent (inside the build environment)
+    - eval $(ssh-agent -s)
+    # Add the SSH key stored in the environment to the agent store
+    - ssh-add <(echo "$PROD_SSH_PRIVATE_KEY")
+    # For Docker builds disable host key checking. Be aware that by adding that
+    # you are susceptible to man-in-the-middle attacks.
+    # WARNING: Use this only with the Docker executor, if you use it with shell
+    # you will overwrite your user's SSH config.
+    - mkdir -p ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - ssh $PROD_USER@$PROD_HOST ls
+
+    # Gzip the bif files
+    - gzip --keep build/web/index.pck
+    - gzip --keep build/web/index.wasm
+
+    # Sync over the files
+    - rsync --recursive --archive --verbose -e ssh --delete build/web/ $PROD_USER@$PROD_HOST:/home/$PROD_USER/$DEPLOY_FOLDER/new/
+    - ssh $PROD_USER@$PROD_HOST "cd $DEPLOY_FOLDER; tree -a"
+  # only:
+  #   - master
 
 # deploy-dev:
 #   image: asherglick/webdeploy:20170802
