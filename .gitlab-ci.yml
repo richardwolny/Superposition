@@ -109,18 +109,18 @@ build-exports:
     - mkdir -p /root/${GODOT_EXPORT_TEMPLATE_DIR}
     - ln -s $PWD/templates /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable
 
-    - echo Godot_v${GODOT_VERSION}-stable_linux_headless.64
-    - ls Godot_v${GODOT_VERSION}-stable_linux_headless.64 || echo "notfound"
-    - echo /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable
-    - ls -al templates || echo "notfound"
-    - ls -al templates/ || echo "notfound"
-    - ls -al /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable || echo "notfound"
-    - ls /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/ || echo "notfound"
-    - ls .
+    # - echo Godot_v${GODOT_VERSION}-stable_linux_headless.64
+    # - ls Godot_v${GODOT_VERSION}-stable_linux_headless.64 || echo "notfound"
+    # - echo /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable
+    # - ls -al templates || echo "notfound"
+    # - ls -al templates/ || echo "notfound"
+    # - ls -al /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable || echo "notfound"
+    # - ls /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/ || echo "notfound"
+    # - ls .
 
     # Dump the current version hash into the "version.gd" file so it can be used ingame
     - echo -e "extends Node\n\nfunc id():\n\treturn \""${CI_COMMIT_SHORT_SHA}"\"" > src/version.gd
-    - cat version.gd
+    # - cat version.gd
 
     # Godot Export All Of the Builds
     #- ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Linux/X11"
