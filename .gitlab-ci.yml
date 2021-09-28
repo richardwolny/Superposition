@@ -13,7 +13,7 @@ stages:
   - setupcache
   - build
   # - test
-  # - deploy
+  - deploy
 
 ################################################################################
 # Downloads the godot binary and caches it for later pipelines to use without
