@@ -83,6 +83,8 @@ setup-cache:
         unzip butler.zip
         rm butler.zip
       fi
+  only:
+    - master
 
 
 
@@ -109,34 +111,23 @@ build-exports:
     - mkdir -p /root/${GODOT_EXPORT_TEMPLATE_DIR}
     - ln -s $PWD/templates /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable
 
-    # - echo Godot_v${GODOT_VERSION}-stable_linux_headless.64
-    # - ls Godot_v${GODOT_VERSION}-stable_linux_headless.64 || echo "notfound"
-    # - echo /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable
-    # - ls -al templates || echo "notfound"
-    # - ls -al templates/ || echo "notfound"
-    # - ls -al /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable || echo "notfound"
-    # - ls /root/${GODOT_EXPORT_TEMPLATE_DIR}/${GODOT_VERSION}.stable/ || echo "notfound"
-    # - ls .
-
     # Dump the current version hash into the "version.gd" file so it can be used ingame
     - echo -e "extends Node\n\nfunc id():\n\treturn \""${CI_COMMIT_SHORT_SHA}"\"" > src/version.gd
-    # - cat version.gd
 
     # Godot Export All Of the Builds
-    #- ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Linux/X11"
-    #- ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Windows Desktop"
-    #- ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Mac OSX"
+    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Linux/X11"
+    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Windows Desktop"
+    - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "Mac OSX"
     - ./Godot_v${GODOT_VERSION}-stable_linux_headless.64 --path src --export "HTML5"
 
     # Install Certificates to make butler happy
-    #- apt-get update
-    #- apt-get install -y ca-certificates
+    - apt-get update
+    - apt-get install -y ca-certificates
 
     # Use butler to upload the three desktop version to itch.io
-    #- ./butler push build/linux asherglick/superposition:linux --userversion ${CI_COMMIT_SHORT_SHA}
-    #- ./butler push build/windows asherglick/superposition:windows --userversion ${CI_COMMIT_SHORT_SHA}
-    #- ./butler push build/osx asherglick/superposition:osx --userversion ${CI_COMMIT_SHORT_SHA}
-
+    - ./butler push build/linux asherglick/superposition:linux --userversion ${CI_COMMIT_SHORT_SHA}
+    - ./butler push build/windows asherglick/superposition:windows --userversion ${CI_COMMIT_SHORT_SHA}
+    - ./butler push build/osx asherglick/superposition:osx --userversion ${CI_COMMIT_SHORT_SHA}
 
     # Move .htaccess into the web folder and compress the files
     - mv web_configs/.htaccess build/web/.htaccess
@@ -146,6 +137,8 @@ build-exports:
     - build/web
     # Expire after 1 hour
     expire_in: 1 hr
+  only:
+    - master
 
 
 
@@ -177,9 +170,8 @@ deploy-prod:
     - echo -e "RewriteEngine on\n\nRewriteCond %{HTTPS} !=on\nRewriteRule ^(.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]\n\nRewriteRule ^$ /${CI_COMMIT_SHORT_SHA}/ [L,R=302]" > .htaccess
     - rsync --verbose -e ssh .htaccess $PROD_USER@$PROD_HOST:/home/$PROD_USER/$DEPLOY_FOLDER/.htaccess
 
-
-  # only:
-  #   - master
+  only:
+    - master
 
 # deploy-dev:
 #   image: asherglick/webdeploy:20170802
