@@ -1,0 +1,57 @@
+<Files index.pck>
+    AddType application/octet-stream .pck
+</Files>
+
+<Files index.wasm>
+    AddType application/wasm .wasm
+</Files>
+
+
+# Turn on mod_rewrite
+RewriteEngine On
+
+# Force HTTPS
+RewriteCond %{HTTPS} !=on
+RewriteRule ^(.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# AddEncoding allows you to have certain browsers uncompress information on the fly.
+AddEncoding gzip .gz
+
+# Serve gzip compressed WASM files if they exist and the client accepts gzip.
+RewriteCond %{HTTP:Accept-encoding} gzip
+RewriteCond %{REQUEST_FILENAME}\.gz -s
+RewriteRule ^(.*)\.wasm $1\.wasm\.gz [QSA]
+
+# Serve gzip compressed PCK files if they exist and the client accepts gzip.
+RewriteCond %{HTTP:Accept-encoding} gzip
+RewriteCond %{REQUEST_FILENAME}\.gz -s
+RewriteRule ^(.*)\.pck $1\.pck\.gz [QSA]
+
+# Serve correct content types, and prevent mod_deflate double gzip.
+RewriteRule \.pck\.gz$ - [T=application/octet-stream,E=no-gzip:1]
+RewriteRule \.wasm\.gz$ - [T=application/wasm,E=no-gzip:1]
+
+
+
+# BEGIN Expire headers
+# We can set them to be very long, 1 year, because each new version of this
+# code gets uploaded to a new directory all together so none of these
+# paths should ever get updated.
+<IfModule mod_expires.c>  
+  # Turn on the module.
+  ExpiresActive on
+  # Set the default expiry times.
+  ExpiresDefault "access plus 2 days"
+  ExpiresByType application/octet-stream "access plus 1 year"
+  ExpiresByType application/wasm "access 1 year"
+  ExpiresByType text/javascript "access plus 1 year"
+
+  # Images
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType image/x-icon "access plus 1 year"
+</IfModule>  
+# END Expire headers
