@@ -175,7 +175,7 @@ deploy-prod:
 
     # Update the root redirect to point to the new folder
     - echo "RewriteEngine on\n\nRewriteCond %{HTTPS} !=on\nRewriteRule ^(.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]\n\nRewriteRule ^$ /${CI_COMMIT_SHORT_SHA}/ [L,R=302]" > .htaccess
-    - rsync --verbose -e ssh --delete .htaccess $PROD_USER@$PROD_HOST:/home/$PROD_USER/$DEPLOY_FOLDER/.htaccess
+    - rsync --verbose -e ssh .htaccess $PROD_USER@$PROD_HOST:/home/$PROD_USER/$DEPLOY_FOLDER/.htaccess
 
 
   # only:
